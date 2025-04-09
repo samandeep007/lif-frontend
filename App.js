@@ -1,23 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import OnboardingStack from './src/navigation/OnboardingStack';
 import MainTabs from './src/navigation/MainTabs';
+import theme from './src/styles/theme';
 
 const App = () => {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
   useEffect(() => {
     const loadFonts = async () => {
       await Font.loadAsync({
-        'Poppins-Regular': require('./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Poppins-Regular.ttf'),
-        'Poppins-Bold': require('./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Poppins-Bold.ttf'),
-        'Poppins-SemiBold': require('./node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Poppins-SemiBold.ttf'),
+        'Poppins-Regular': require('./src/assets/fonts/Poppins-Regular.ttf'),
+        'Poppins-Bold': require('./src/assets/fonts/Poppins-Bold.ttf'),
+        'Poppins-SemiBold': require('./src/assets/fonts/Poppins-SemiBold.ttf'),
       });
+      setFontsLoaded(true);
     };
     loadFonts();
   }, []);
 
-  // We'll add logic to determine if the user is authenticated in a later chunk
+  if (!fontsLoaded) {
+    return null; // Wait for fonts to load
+  }
+
   const isAuthenticated = false;
 
   return (
