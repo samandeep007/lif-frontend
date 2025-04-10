@@ -1,29 +1,39 @@
 {
   "expo": {
-    "name": "lif-frontend",
-    "slug": "lif-frontend",
+    "name": "Love Is Free",
+    "slug": "love-is-free",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.loveisfree",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We need access to your camera for video calls.",
+        "NSMicrophoneUsageDescription": "We need access to your microphone for audio and video calls."
+      }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+      "package": "com.yourcompany.loveisfree",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "plugins": ["expo-secure-store"]
+    }
   }
 }

@@ -3,7 +3,7 @@ import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Plat
 import styled from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import Spinner from 'react-native-loading-spinner-overlay';
+import { useNavigation } from '@react-navigation/native';
 import theme from '../styles/theme';
 import Text from '../components/common/Text';
 import ChatListItem from '../components/ChatListItem';
@@ -11,6 +11,7 @@ import MessageBubble from '../components/MessageBubble';
 import api from '../api/api';
 import useAuthStore from '../store/authStore';
 import { initSocket, disconnectSocket } from '../utils/socket';
+import { io } from 'socket.io-client';
 
 const Container = styled.View`
   flex: 1;
@@ -32,6 +33,11 @@ const Header = styled.View`
   flex-direction: row;
   align-items: center;
   background-color: ${theme.colors.text.primary}10;
+`;
+
+const HeaderButtonContainer = styled.View`
+  flex-direction: row;
+  margin-left: auto;
 `;
 
 const InputContainer = styled.View`
@@ -84,24 +90,20 @@ const ErrorMessage = styled(Text)`
   text-align: center;
 `;
 
-const ChatScreen = ({ navigation }) => {
+const ChatScreen = () => {
   const userId = useAuthStore((state) => state.user?._id);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isSendingImage, setIsSendingImage] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [typing, setTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const initialLoadRef = useRef(true);
   const socketRef = useRef(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -122,18 +124,14 @@ const ChatScreen = ({ navigation }) => {
       socketRef.current = await initSocket();
       if (!socketRef.current) return;
 
-      // Join chat rooms for all matches
       const matchIds = chats.map(chat => chat.matchId);
       socketRef.current.emit('join_chats', matchIds);
 
-      // Listen for new messages
       socketRef.current.on('new_message', (message) => {
-        console.log('Received new message:', message);
         if (message.matchId === selectedChat?.matchId) {
           setMessages(prev => [...prev, message]);
           flatListRef.current?.scrollToEnd({ animated: true });
         }
-        // Update chats list with the new last message
         setChats(prev =>
           prev.map(chat =>
             chat.matchId === message.matchId
@@ -143,7 +141,6 @@ const ChatScreen = ({ navigation }) => {
         );
       });
 
-      // Listen for deleted messages
       socketRef.current.on('message_deleted', ({ messageId }) => {
         console.log('Received message_deleted event:', messageId);
         if (selectedChat) {
@@ -151,14 +148,12 @@ const ChatScreen = ({ navigation }) => {
         }
       });
 
-      // Listen for typing indicators
       socketRef.current.on('typing', ({ userId: typingUserId, isTyping }) => {
         if (typingUserId !== userId && selectedChat?.otherUser.id === typingUserId) {
           setOtherUserTyping(isTyping);
         }
       });
 
-      // Listen for read receipts
       socketRef.current.on('message_read', ({ messageId }) => {
         setMessages(prev =>
           prev.map(msg =>
@@ -166,125 +161,113 @@ const ChatScreen = ({ navigation }) => {
           )
         );
       });
+
+      // Handle incoming call notifications
+      socketRef.current.on('call_initiated', ({ callId, type, initiatorId }) => {
+        if (selectedChat && selectedChat.matchId === callId) {
+          navigation.navigate('Call', {
+            userId,
+            matchId: callId,
+            callType: type,
+            otherUserName: selectedChat.otherUser.name,
+            isIncoming: true,
+            senderId: initiatorId
+          });
+        }
+      });
+
+      // Handle call acceptance
+      socketRef.current.on('call_accepted', ({ callId, matchId: incomingMatchId, callType: incomingCallType, receiverId }) => {
+        if (incomingMatchId === selectedChat?.matchId && userId === receiverId) {
+          navigation.navigate('Call', {
+            userId,
+            matchId: incomingMatchId,
+            callType: incomingCallType,
+            otherUserName: selectedChat.otherUser.name,
+            isIncoming: false
+          });
+        }
+      });
+
+      // Handle call rejection
+      socketRef.current.on('call_rejected', ({ matchId: incomingMatchId, receiverId }) => {
+        if (incomingMatchId === selectedChat?.matchId) {
+          setErrorMessage('Call rejected by the other user');
+        }
+      });
+
+      // Handle call end
+      socketRef.current.on('call_ended', ({ callId }) => {
+        if (selectedChat && selectedChat.matchId === callId) {
+          navigation.goBack();
+        }
+      });
     };
     setupSocket();
 
     return () => {
       disconnectSocket();
     };
-  }, [chats, selectedChat, userId]);
-
-  const fetchMessages = async (pageNum) => {
-    if (!selectedChat) return;
-
-    try {
-      setIsLoadingMore(pageNum > 1);
-      const response = await api.get(`/chats/${selectedChat.matchId}/messages`, {
-        params: { page: pageNum, limit: 50 },
-      });
-      if (response.data.success) {
-        const newMessages = response.data.data;
-        if (newMessages.length < 50) {
-          setHasMore(false);
-        }
-        if (pageNum === 1) {
-          setMessages(newMessages);
-          initialLoadRef.current = false;
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
-          }, 100);
-        } else {
-          setMessages(prev => [...newMessages, ...prev]);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
+  }, [chats, selectedChat, userId, navigation]);
 
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
     setSelectedImage(null);
-    setIsSendingImage(false);
-    setErrorMessage(null);
-    setPage(1);
-    setHasMore(true);
-    initialLoadRef.current = true;
-    await fetchMessages(1);
-  };
-
-  const handleLoadMore = async () => {
-    if (!hasMore || isLoadingMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    await fetchMessages(nextPage);
+    try {
+      const response = await api.get(`/chats/${chat.matchId}/messages`);
+      if (response.data.success) {
+        setMessages(response.data.data);
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      setErrorMessage('Failed to load messages: ' + (error.message || 'Network error'));
+    }
   };
 
   const handleSendMessage = async () => {
     if (!selectedChat) return;
 
     if (selectedImage) {
-      console.log('Sending image message...');
-      setIsSendingImage(true);
-      setErrorMessage(null);
       const formData = new FormData();
-      try {
-        if (Platform.OS === 'web') {
-          console.log('Platform: Web, fetching blob...');
-          const response = await fetch(selectedImage);
-          console.log('Fetch response:', response);
-          if (!response.ok) {
-            throw new Error('Failed to fetch blob from base64 URI');
-          }
-          const blob = await response.blob();
-          console.log('Blob fetched:', blob);
-          formData.append('image', blob, 'chat-image.jpg');
-        } else {
-          console.log('Platform: Native, using URI...');
-          formData.append('image', {
-            uri: selectedImage,
-            type: 'image/jpeg',
-            name: 'chat-image.jpg',
-          });
-        }
-        formData.append('matchId', selectedChat.matchId);
+      if (Platform.OS === 'web') {
+        const response = await fetch(selectedImage);
+        const blob = await response.blob();
+        formData.append('image', blob, 'chat-image.jpg');
+      } else {
+        formData.append('image', {
+          uri: selectedImage,
+          type: 'image/jpeg',
+          name: 'chat-image.jpg',
+        });
+      }
+      formData.append('matchId', selectedChat.matchId);
 
-        console.log('Sending formData to /api/chats/image-message...');
+      try {
         const response = await api.post('/chats/image-message', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 30000,
         });
-        console.log('Image message response:', response.data);
         if (response.data.success) {
           setSelectedImage(null);
-        } else {
-          setErrorMessage('Failed to send image: ' + (response.data.message || 'Unknown error'));
         }
       } catch (error) {
         console.error('Error sending image message:', error);
-        console.log('Error details:', error.response ? error.response.data : error.message);
-        console.log('Error stack:', error.stack);
         setErrorMessage('Failed to send image: ' + (error.message || 'Network error'));
-      } finally {
-        setIsSendingImage(false);
       }
     } else if (newMessage.trim()) {
-      console.log('Sending text message...');
       try {
         const response = await api.post('/chats/message', {
           matchId: selectedChat.matchId,
           content: newMessage,
         });
-        console.log('Text message response:', response.data);
         if (response.data.success) {
           setNewMessage('');
         }
       } catch (error) {
-        console.error('Error sending text message:', error);
+        console.error('Error sending message:', error);
+        setErrorMessage('Failed to send message: ' + (error.message || 'Network error'));
       }
     }
   };
@@ -298,7 +281,7 @@ const ChatScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error deleting message:', error);
-      setErrorMessage('Failed to delete message: ' + (error.message || 'Unknown error'));
+      setErrorMessage('Failed to delete message: ' + (error.message || 'Network error'));
     }
   };
 
@@ -329,11 +312,12 @@ const ChatScreen = ({ navigation }) => {
   };
 
   const handleTyping = () => {
-    if (!selectedChat || !socketRef.current) return;
+    if (!selectedChat) return;
 
+    const socket = io('https://lif-backend-awv3.onrender.com');
     if (!typing) {
       setTyping(true);
-      socketRef.current.emit('typing', { matchId: selectedChat.matchId, isTyping: true });
+      socket.emit('typing', { matchId: selectedChat.matchId, isTyping: true });
     }
 
     if (typingTimeoutRef.current) {
@@ -342,13 +326,35 @@ const ChatScreen = ({ navigation }) => {
 
     typingTimeoutRef.current = setTimeout(() => {
       setTyping(false);
-      socketRef.current.emit('typing', { matchId: selectedChat.matchId, isTyping: false });
+      socket.emit('typing', { matchId: selectedChat.matchId, isTyping: false });
     }, 2000);
   };
 
   const handleReadMessage = (messageId) => {
-    if (!socketRef.current) return;
-    socketRef.current.emit('read_message', { messageId, matchId: selectedChat.matchId });
+    const socket = io('https://lif-backend-awv3.onrender.com');
+    socket.emit('read_message', { messageId, matchId: selectedChat.matchId });
+  };
+
+  const initiateCall = async (callType) => {
+    try {
+      const response = await api.post('/calls/initiate', {
+        matchId: selectedChat.matchId,
+        type: callType
+      });
+      if (response.data.success) {
+        console.log(`${callType} call initiated with callId:`, response.data.data.callId);
+        navigation.navigate('Call', {
+          userId,
+          matchId: selectedChat.matchId,
+          callType,
+          otherUserName: selectedChat.otherUser.name,
+          isIncoming: false
+        });
+      }
+    } catch (error) {
+      console.error(`Error initiating ${callType} call:`, error);
+      setErrorMessage(`Failed to initiate ${callType} call: ` + (error.message || 'Network error'));
+    }
   };
 
   const renderMessage = ({ item, index }) => {
@@ -379,7 +385,7 @@ const ChatScreen = ({ navigation }) => {
             renderItem={({ item }) => (
               <ChatListItem chat={item} onPress={() => handleSelectChat(item)} />
             )}
-            ListEmptyComponent={<Text variant="body" style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>No chats yet!</Text>}
+            ListEmptyComponent={<Text variant="body" style={{ textAlign: 'center', padding: theme.spacing.md }}>No chats yet!</Text>}
           />
         </ChatListContainer>
       </Container>
@@ -395,6 +401,14 @@ const ChatScreen = ({ navigation }) => {
         <Text variant="h2" style={{ marginLeft: theme.spacing.md, color: theme.colors.text.primary, fontSize: 20 }}>
           {selectedChat.otherUser.name}
         </Text>
+        <HeaderButtonContainer>
+          <TouchableOpacity onPress={() => initiateCall('video')} style={{ marginRight: theme.spacing.md }}>
+            <Ionicons name="videocam" size={24} color={theme.colors.accent.pink} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => initiateCall('audio')}>
+            <Ionicons name="call" size={24} color={theme.colors.accent.pink} />
+          </TouchableOpacity>
+        </HeaderButtonContainer>
       </Header>
       <ChatContainer>
         <FlatList
@@ -403,20 +417,7 @@ const ChatScreen = ({ navigation }) => {
           keyExtractor={(item) => item._id}
           renderItem={renderMessage}
           ListEmptyComponent={<Text variant="body" style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>No messages yet!</Text>}
-          onContentSizeChange={() => {
-            if (initialLoadRef.current) {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }
-          }}
-          onEndReachedThreshold={0.1}
-          onEndReached={handleLoadMore}
-          ListFooterComponent={isLoadingMore ? (
-            <View style={{ padding: theme.spacing.md, alignItems: 'center' }}>
-              <Text variant="body" style={{ color: theme.colors.text.secondary, fontStyle: 'italic' }}>
-                Loading more messages...
-              </Text>
-            </View>
-          ) : null}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
         {otherUserTyping && (
           <TypingIndicator>
@@ -432,12 +433,6 @@ const ChatScreen = ({ navigation }) => {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
         >
-          <Spinner
-            visible={isSendingImage || isLoadingMore}
-            textContent={isSendingImage ? 'Sending image...' : 'Loading more messages...'}
-            textStyle={{ color: theme.colors.text.primary }}
-            overlayColor="rgba(0, 0, 0, 0.5)"
-          />
           <InputContainer>
             {selectedImage ? (
               <ImagePreviewContainer>
@@ -467,8 +462,8 @@ const ChatScreen = ({ navigation }) => {
               </MessageInputContainer>
             )}
             {selectedImage && (
-              <TouchableOpacity onPress={handleSendMessage} disabled={isSendingImage}>
-                <Ionicons name="send" size={24} color={isSendingImage ? theme.colors.text.secondary : theme.colors.accent.pink} />
+              <TouchableOpacity onPress={handleSendMessage}>
+                <Ionicons name="send" size={24} color={theme.colors.accent.pink} />
               </TouchableOpacity>
             )}
           </InputContainer>
