@@ -11,11 +11,12 @@ const OnboardingStack = () => {
       initialRouteName="Welcome"
       screenOptions={{
         headerShown: false,
-        animationEnabled: Platform.OS !== 'web', // Disable animations on web
+        animationEnabled: Platform.OS !== 'web',
       }}
     >
       <Stack.Screen name="Welcome" component={OnboardingScreen} />
       <Stack.Screen name="SignUp" component={OnboardingScreen} />
+      <Stack.Screen name="Login" component={OnboardingScreen} />
       <Stack.Screen name="EmailVerification" component={OnboardingScreen} />
       <Stack.Screen name="ProfileSetup" component={OnboardingScreen} />
       <Stack.Screen name="FinalWelcome" component={OnboardingScreen} />

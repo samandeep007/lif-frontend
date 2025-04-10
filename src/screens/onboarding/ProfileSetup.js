@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Animated, Easing, Image, TouchableOpacity, TextInput } from 'react-native';
+import { Animated, Easing, Image, TouchableOpacity, TextInput, Platform } from 'react-native';
 import styled from 'styled-components/native';
 import * as ImagePicker from 'expo-image-picker';
 import theme from '../../styles/theme';
@@ -63,19 +63,19 @@ const ProfileSetup = ({ navigation }) => {
       toValue: 1,
       friction: 5,
       tension: 40,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
     Animated.timing(bioTranslate, {
       toValue: 0,
       duration: 300,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
     Animated.spring(continueButtonScale, {
       toValue: 1,
       friction: 5,
       tension: 40,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
   ]).start();
 

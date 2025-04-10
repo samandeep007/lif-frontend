@@ -1,5 +1,5 @@
 import React from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 import styled from 'styled-components/native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import theme from '../../styles/theme';
@@ -24,13 +24,13 @@ const FinalWelcome = ({ navigation }) => {
       toValue: 1,
       duration: 500,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
     Animated.spring(finalButtonScale, {
       toValue: 1,
       friction: 5,
       tension: 40,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
   ]).start();
 

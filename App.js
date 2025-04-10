@@ -3,12 +3,12 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import * as SecureStore from 'expo-secure-store';
 import OnboardingStack from './src/navigation/OnboardingStack';
 import MainTabs from './src/navigation/MainTabs';
 import theme from './src/styles/theme';
 import useAuthStore from './src/store/authStore';
 import api from './src/api/api';
+import { getItemAsync, setItemAsync, deleteItemAsync } from './src/utils/secureStore';
 
 // Enable screens for React Navigation
 import { enableScreens } from 'react-native-screens';
@@ -35,7 +35,7 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = await SecureStore.getItemAsync('authToken');
+        const token = await getItemAsync('authToken');
         if (token) {
           const response = await api.get('/users/me');
           if (response.data.success) {
@@ -43,12 +43,12 @@ const App = () => {
             setToken(token);
             setIsAuthenticated(true);
           } else {
-            await SecureStore.deleteItemAsync('authToken');
+            await deleteItemAsync('authToken');
           }
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
-        await SecureStore.deleteItemAsync('authToken');
+        console.error('Auth check failed:', error.message);
+        await deleteItemAsync('authToken');
       }
     };
     checkAuth();

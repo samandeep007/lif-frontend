@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { getItemAsync } from '../utils/secureStore';
 
 const api = axios.create({
   baseURL: 'https://lif-backend-awv3.onrender.com/api',
@@ -12,7 +12,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await SecureStore.getItemAsync('authToken');
+      const token = await getItemAsync('authToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }

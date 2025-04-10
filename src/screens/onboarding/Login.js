@@ -6,6 +6,8 @@ import Text from '../../components/common/Text';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import api from '../../api/api';
+import useAuthStore from '../../store/authStore';
+import { setItemAsync } from '../../utils/secureStore';
 
 const Container = styled.View`
   flex: 1;
@@ -15,24 +17,20 @@ const Container = styled.View`
   padding: ${theme.spacing.lg}px;
 `;
 
-const SignUp = ({ navigation, setFormData }) => {
+const Login = ({ navigation }) => {
+  const setUser = useAuthStore((state) => state.setUser);
+  const setToken = useAuthStore((state) => state.setToken);
   const [form, setForm] = useState({
     email: '',
     password: '',
-    name: '',
-    age: '',
-    gender: '',
   });
   const [errors, setErrors] = useState({});
 
   const inputTranslates = [
     new Animated.Value(50),
     new Animated.Value(50),
-    new Animated.Value(50),
-    new Animated.Value(50),
-    new Animated.Value(50),
   ];
-  const signUpButtonScale = new Animated.Value(0.9);
+  const loginButtonScale = new Animated.Value(0.9);
 
   Animated.parallel([
     ...inputTranslates.map((translate, index) =>
@@ -44,7 +42,7 @@ const SignUp = ({ navigation, setFormData }) => {
         useNativeDriver: Platform.OS !== 'web',
       })
     ),
-    Animated.spring(signUpButtonScale, {
+    Animated.spring(loginButtonScale, {
       toValue: 1,
       friction: 5,
       tension: 40,
@@ -57,52 +55,56 @@ const SignUp = ({ navigation, setFormData }) => {
     if (!form.email || !/\S+@\S+\.\S+/.test(form.email)) {
       newErrors.email = 'Please enter a valid email';
     }
-    if (!form.password || form.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    if (!form.name) {
-      newErrors.name = 'Name is required';
-    }
-    if (!form.age || isNaN(form.age) || form.age < 18) {
-      newErrors.age = 'Age must be a number and at least 18';
-    }
-    if (!form.gender) {
-      newErrors.gender = 'Gender is required';
+    if (!form.password) {
+      newErrors.password = 'Password is required';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignUp = async () => {
+  const handleLogin = async () => {
     if (!validateForm()) return;
 
     try {
-      const response = await api.post('/auth/register', {
+      const response = await api.post('/auth/login', {
         email: form.email,
         password: form.password,
-        name: form.name,
-        age: parseInt(form.age, 10),
-        gender: form.gender,
       });
       if (response.data.success) {
-        setFormData(form);
-        navigation.navigate('EmailVerification');
+        const { token } = response.data.data;
+        await setItemAsync('authToken', token);
+        setToken(token);
+
+        // Fetch user profile to check status
+        const userResponse = await api.get('/users/me');
+        if (userResponse.data.success) {
+          const user = userResponse.data.data;
+          setUser(user);
+
+          if (!user.isVerified) {
+            navigation.navigate('EmailVerification');
+          } else if (!user.photos || user.photos.length === 0 || !user.bio) {
+            navigation.navigate('ProfileSetup');
+          } else {
+            navigation.replace('MainTabs');
+          }
+        }
       }
     } catch (error) {
-      console.error('Sign-up error:', error);
+      console.error('Login error:', error);
       setErrors({
         general:
           error.response?.data?.message ||
           error.message ||
-          'Sign-up failed. Please try again.',
+          'Login failed. Please try again.',
       });
     }
   };
 
   return (
     <Container>
-      <Text variant="h1">Create Your Account</Text>
-      {['email', 'password', 'name', 'age', 'gender'].map((field, index) => (
+      <Text variant="h1">Welcome Back</Text>
+      {['email', 'password'].map((field, index) => (
         <Animated.View
           key={field}
           style={{
@@ -125,11 +127,17 @@ const SignUp = ({ navigation, setFormData }) => {
           {errors.general}
         </Text>
       )}
-      <Animated.View style={{ transform: [{ scale: signUpButtonScale }], marginTop: theme.spacing.lg }}>
-        <Button title="Sign Up" onPress={handleSignUp} />
+      <Animated.View style={{ transform: [{ scale: loginButtonScale }], marginTop: theme.spacing.lg }}>
+        <Button title="Login" onPress={handleLogin} />
       </Animated.View>
+      <Button
+        title="Sign Up Instead"
+        onPress={() => navigation.navigate('SignUp')}
+        gradient={false}
+        style={{ marginTop: theme.spacing.md }}
+      />
     </Container>
   );
 };
 
-export default SignUp;
+export default Login;

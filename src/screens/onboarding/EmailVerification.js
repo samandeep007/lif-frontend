@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Animated, Easing } from 'react-native';
+import { Animated, Easing, Platform } from 'react-native';
 import styled from 'styled-components/native';
 import theme from '../../styles/theme';
 import Text from '../../components/common/Text';
 import Button from '../../components/common/Button';
 import api from '../../api/api';
 import { triggerHaptic } from '../../utils/haptics';
-import * as SecureStore from 'expo-secure-store';
 import useAuthStore from '../../store/authStore';
+import { setItemAsync } from '../../utils/secureStore';
 
 const Container = styled.View`
   flex: 1;
@@ -31,13 +31,13 @@ const EmailVerification = ({ navigation, formData }) => {
       toValue: 1,
       duration: 500,
       easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
     Animated.spring(resendButtonScale, {
       toValue: 1,
       friction: 5,
       tension: 40,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }),
   ]).start();
 
@@ -50,7 +50,7 @@ const EmailVerification = ({ navigation, formData }) => {
           setIsVerified(true);
           setUser(response.data.data);
           setToken(response.data.data.token);
-          await SecureStore.setItemAsync('authToken', response.data.data.token);
+          await setItemAsync('authToken', response.data.data.token);
         }
       } catch (error) {
         console.log('Verification check failed:', error.response?.data?.message || error.message);
