@@ -3,7 +3,6 @@ import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Plat
 import styled from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from '@react-navigation/native';
 import theme from '../styles/theme';
 import Text from '../components/common/Text';
 import ChatListItem from '../components/ChatListItem';
@@ -26,6 +25,11 @@ const ChatContainer = styled.View`
   flex: 1;
 `;
 
+const Heading = styled.View`
+  padding: ${theme.spacing.lg}px;
+  background-color: ${theme.colors.background};
+`;
+
 const Header = styled.View`
   padding: ${theme.spacing.lg}px;
   border-bottom-width: 1px;
@@ -33,11 +37,6 @@ const Header = styled.View`
   flex-direction: row;
   align-items: center;
   background-color: ${theme.colors.text.primary}10;
-`;
-
-const HeaderButtonContainer = styled.View`
-  flex-direction: row;
-  margin-left: auto;
 `;
 
 const InputContainer = styled.View`
@@ -90,7 +89,7 @@ const ErrorMessage = styled(Text)`
   text-align: center;
 `;
 
-const ChatScreen = () => {
+const ChatScreen = ({ navigation }) => {
   const userId = useAuthStore((state) => state.user?._id);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -103,7 +102,6 @@ const ChatScreen = () => {
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const socketRef = useRef(null);
-  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -124,14 +122,17 @@ const ChatScreen = () => {
       socketRef.current = await initSocket();
       if (!socketRef.current) return;
 
+      // Join chat rooms for all matches
       const matchIds = chats.map(chat => chat.matchId);
       socketRef.current.emit('join_chats', matchIds);
 
+      // Listen for new messages
       socketRef.current.on('new_message', (message) => {
         if (message.matchId === selectedChat?.matchId) {
           setMessages(prev => [...prev, message]);
           flatListRef.current?.scrollToEnd({ animated: true });
         }
+        // Update chats list with the new last message
         setChats(prev =>
           prev.map(chat =>
             chat.matchId === message.matchId
@@ -141,6 +142,7 @@ const ChatScreen = () => {
         );
       });
 
+      // Listen for deleted messages
       socketRef.current.on('message_deleted', ({ messageId }) => {
         console.log('Received message_deleted event:', messageId);
         if (selectedChat) {
@@ -148,12 +150,14 @@ const ChatScreen = () => {
         }
       });
 
+      // Listen for typing indicators
       socketRef.current.on('typing', ({ userId: typingUserId, isTyping }) => {
         if (typingUserId !== userId && selectedChat?.otherUser.id === typingUserId) {
           setOtherUserTyping(isTyping);
         }
       });
 
+      // Listen for read receipts
       socketRef.current.on('message_read', ({ messageId }) => {
         setMessages(prev =>
           prev.map(msg =>
@@ -161,54 +165,13 @@ const ChatScreen = () => {
           )
         );
       });
-
-      // Handle incoming call notifications
-      socketRef.current.on('call_initiated', ({ callId, type, initiatorId }) => {
-        if (selectedChat && selectedChat.matchId === callId) {
-          navigation.navigate('Call', {
-            userId,
-            matchId: callId,
-            callType: type,
-            otherUserName: selectedChat.otherUser.name,
-            isIncoming: true,
-            senderId: initiatorId
-          });
-        }
-      });
-
-      // Handle call acceptance
-      socketRef.current.on('call_accepted', ({ callId, matchId: incomingMatchId, callType: incomingCallType, receiverId }) => {
-        if (incomingMatchId === selectedChat?.matchId && userId === receiverId) {
-          navigation.navigate('Call', {
-            userId,
-            matchId: incomingMatchId,
-            callType: incomingCallType,
-            otherUserName: selectedChat.otherUser.name,
-            isIncoming: false
-          });
-        }
-      });
-
-      // Handle call rejection
-      socketRef.current.on('call_rejected', ({ matchId: incomingMatchId, receiverId }) => {
-        if (incomingMatchId === selectedChat?.matchId) {
-          setErrorMessage('Call rejected by the other user');
-        }
-      });
-
-      // Handle call end
-      socketRef.current.on('call_ended', ({ callId }) => {
-        if (selectedChat && selectedChat.matchId === callId) {
-          navigation.goBack();
-        }
-      });
     };
     setupSocket();
 
     return () => {
       disconnectSocket();
     };
-  }, [chats, selectedChat, userId, navigation]);
+  }, [chats, selectedChat, userId]);
 
   const handleSelectChat = async (chat) => {
     setSelectedChat(chat);
@@ -335,28 +298,6 @@ const ChatScreen = () => {
     socket.emit('read_message', { messageId, matchId: selectedChat.matchId });
   };
 
-  const initiateCall = async (callType) => {
-    try {
-      const response = await api.post('/calls/initiate', {
-        matchId: selectedChat.matchId,
-        type: callType
-      });
-      if (response.data.success) {
-        console.log(`${callType} call initiated with callId:`, response.data.data.callId);
-        navigation.navigate('Call', {
-          userId,
-          matchId: selectedChat.matchId,
-          callType,
-          otherUserName: selectedChat.otherUser.name,
-          isIncoming: false
-        });
-      }
-    } catch (error) {
-      console.error(`Error initiating ${callType} call:`, error);
-      setErrorMessage(`Failed to initiate ${callType} call: ` + (error.message || 'Network error'));
-    }
-  };
-
   const renderMessage = ({ item, index }) => {
     const isSent = item.senderId === userId;
     const currentDate = new Date(item.createdAt).toLocaleDateString();
@@ -378,6 +319,11 @@ const ChatScreen = () => {
   if (!selectedChat) {
     return (
       <Container>
+        <Heading>
+          <Text variant="h1" style={{ color: theme.colors.text.primary, marginBottom: theme.spacing.lg }}>
+            Chats
+          </Text>
+        </Heading>
         <ChatListContainer>
           <FlatList
             data={chats}
@@ -401,14 +347,6 @@ const ChatScreen = () => {
         <Text variant="h2" style={{ marginLeft: theme.spacing.md, color: theme.colors.text.primary, fontSize: 20 }}>
           {selectedChat.otherUser.name}
         </Text>
-        <HeaderButtonContainer>
-          <TouchableOpacity onPress={() => initiateCall('video')} style={{ marginRight: theme.spacing.md }}>
-            <Ionicons name="videocam" size={24} color={theme.colors.accent.pink} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => initiateCall('audio')}>
-            <Ionicons name="call" size={24} color={theme.colors.accent.pink} />
-          </TouchableOpacity>
-        </HeaderButtonContainer>
       </Header>
       <ChatContainer>
         <FlatList

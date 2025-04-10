@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Add this import
 import styled from 'styled-components/native';
 import theme from '../styles/theme';
 import Text from '../components/common/Text';

@@ -5,15 +5,44 @@ import { Ionicons } from '@expo/vector-icons';
 import theme from '../styles/theme';
 import SwipeCard from '../components/SwipeCard';
 import MatchModal from '../components/MatchModal';
-import Text from '../components/common/Text'; // Ensure correct import
+import Text from '../components/common/Text';
 import api from '../api/api';
 import useAuthStore from '../store/authStore';
 
 const Container = styled.View`
   flex: 1;
   background-color: ${theme.colors.background};
+`;
+
+const Header = styled.View`
+  width: 100%;
+  padding: ${theme.spacing.md}px;
+  background-color: ${theme.colors.accent.pink}10; /* Light pink background */
+  align-items: center;
+  justify-content: center;
+  border-bottom-width: 1px;
+  border-bottom-color: ${theme.colors.text.secondary}20;
+`;
+
+const Content = styled.View`
+  flex: 1;
   justify-content: center;
   align-items: center;
+`;
+
+const ErrorWrapper = styled.View`
+  height: 40px; /* Reserve space for error message */
+  margin-bottom: ${theme.spacing.lg}px;
+`;
+
+const ErrorText = styled(Text)`
+  color: ${theme.colors.accent.red};
+  text-align: center;
+`;
+
+const NoUsersWrapper = styled.View`
+  height: 40px; /* Reserve space for "No more users" message */
+  margin-bottom: ${theme.spacing.lg}px;
 `;
 
 const ActionButtons = styled.View`
@@ -103,42 +132,39 @@ const SwipeScreen = () => {
     setCurrentIndex(currentIndex + 1);
   };
 
-  if (loading) {
-    return (
-      <Container>
-        <ActivityIndicator size="large" color={theme.colors.accent.pink} />
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Text variant="h1" style={{ color: theme.colors.accent.red }}>
-          {error}
-        </Text>
-      </Container>
-    );
-  }
-
-  if (currentIndex >= users.length) {
-    return (
-      <Container>
-        <Text variant="h1">No more users to swipe!</Text>
-      </Container>
-    );
-  }
-
   return (
     <Container>
-      {users.slice(currentIndex).map((user, index) => (
-        <SwipeCard
-          key={user._id}
-          user={user}
-          onSwipe={handleSwipe}
-          index={index}
-        />
-      ))}
+      <Header>
+        <Text variant="h1" style={{ color: theme.colors.text.primary }}>
+          LIF
+        </Text>
+      </Header>
+      <Content>
+        {loading ? (
+          <ActivityIndicator size="large" color={theme.colors.accent.pink} />
+        ) : currentIndex >= users.length ? (
+          <>
+            <NoUsersWrapper>
+              <Text variant="h1">No more users to swipe!</Text>
+            </NoUsersWrapper>
+            <ErrorWrapper />
+          </>
+        ) : (
+          <>
+            {users.slice(currentIndex).map((user, index) => (
+              <SwipeCard
+                key={user._id}
+                user={user}
+                onSwipe={handleSwipe}
+                index={index}
+              />
+            ))}
+            <ErrorWrapper>
+              {error && <ErrorText>{error}</ErrorText>}
+            </ErrorWrapper>
+          </>
+        )}
+      </Content>
       <ActionButtons>
         <ActionButton onPress={() => handleSwipe('left', users[currentIndex])}>
           <Ionicons name="close" size={30} color={theme.colors.accent.red} />

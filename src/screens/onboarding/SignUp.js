@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Animated, Easing, Platform } from 'react-native';
 import styled from 'styled-components/native';
 import theme from '../../styles/theme';
@@ -13,6 +13,27 @@ const Container = styled.View`
   justify-content: center;
   align-items: center;
   padding: ${theme.spacing.lg}px;
+`;
+
+const InputContainer = styled(Animated.View)`
+  margin-top: ${theme.spacing.sm}px;
+  align-self: center; /* Ensure centering */
+`;
+
+const ErrorWrapper = styled.View`
+  height: 10x; /* Reserve space for general error message */
+  margin-top: ${theme.spacing.sm}px;
+  margin-bottom: ${theme.spacing.md}px; /* Add spacing below error message */
+`;
+
+const ErrorText = styled(Text)`
+  color: ${theme.colors.accent.red};
+  text-align: center;
+`;
+
+const ButtonContainer = styled(Animated.View)`
+  margin-top: ${theme.spacing.lg}px;
+  align-self: center; /* Ensure centering */
 `;
 
 const SignUp = ({ navigation, setFormData }) => {
@@ -34,23 +55,25 @@ const SignUp = ({ navigation, setFormData }) => {
   ];
   const signUpButtonScale = new Animated.Value(0.9);
 
-  Animated.parallel([
-    ...inputTranslates.map((translate, index) =>
-      Animated.timing(translate, {
-        toValue: 0,
-        duration: 300,
-        delay: index * 100,
-        easing: Easing.inOut(Easing.ease),
+  useEffect(() => {
+    Animated.parallel([
+      ...inputTranslates.map((translate, index) =>
+        Animated.timing(translate, {
+          toValue: 0,
+          duration: 300,
+          delay: index * 100,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: Platform.OS !== 'web',
+        })
+      ),
+      Animated.spring(signUpButtonScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
         useNativeDriver: Platform.OS !== 'web',
-      })
-    ),
-    Animated.spring(signUpButtonScale, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: Platform.OS !== 'web',
-    }),
-  ]).start();
+      }),
+    ]).start();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const validateForm = () => {
     const newErrors = {};
@@ -101,14 +124,14 @@ const SignUp = ({ navigation, setFormData }) => {
 
   return (
     <Container>
-      <Text variant="h1">Create Your Account</Text>
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
+        Create Your Account
+      </Text>
       {['email', 'password', 'name', 'age', 'gender'].map((field, index) => (
-        <Animated.View
+        <InputContainer
           key={field}
           style={{
             transform: [{ translateY: inputTranslates[index] }],
-            width: '100%',
-            marginTop: theme.spacing.sm,
           }}
         >
           <Input
@@ -118,26 +141,20 @@ const SignUp = ({ navigation, setFormData }) => {
             error={errors[field]}
             secureTextEntry={field === 'password'}
           />
-        </Animated.View>
+        </InputContainer>
       ))}
-      {errors.general && (
-        <Text
-          style={{
-            color: theme.colors.accent.red,
-            marginTop: theme.spacing.sm,
-          }}
-        >
-          {errors.general}
-        </Text>
-      )}
-      <Animated.View
+      <ErrorWrapper>
+        {errors.general && (
+          <ErrorText>{errors.general}</ErrorText>
+        )}
+      </ErrorWrapper>
+      <ButtonContainer
         style={{
           transform: [{ scale: signUpButtonScale }],
-          marginTop: theme.spacing.lg,
         }}
       >
         <Button title="Sign Up" onPress={handleSignUp} />
-      </Animated.View>
+      </ButtonContainer>
     </Container>
   );
 };

@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import theme from '../styles/theme';
 import SwipeScreen from '../screens/Swipe';
 import ChatScreen from '../screens/Chat';
-import CallScreen from '../screens/Call';
 import ProfileScreen from '../screens/Profile';
 import ConfessionScreen from '../screens/Confession';
 import NotificationsScreen from '../screens/Notifications';
@@ -13,24 +12,21 @@ import { triggerHaptic } from '../utils/haptics';
 
 const Stack = createStackNavigator();
 
-const ChatStackNavigator = () => {
+// Stack navigator for the Profile tab (only ProfileScreen)
+const ProfileStackNavigator = ({ navigation }) => {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="ChatList"
-        component={ChatScreen}
+        name="ProfileMain"
         options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Call"
-        component={CallScreen}
-        options={{ headerShown: false }}
-      />
+      >
+        {props => <ProfileScreen {...props} navigation={navigation} />}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 };
 
-const MainTabs = () => {
+const MainTabs = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Swipe');
 
   const handleTabPress = tabName => {
@@ -41,17 +37,17 @@ const MainTabs = () => {
   const renderScreen = () => {
     switch (activeTab) {
       case 'Swipe':
-        return <SwipeScreen />;
+        return <SwipeScreen navigation={navigation} />;
       case 'Chat':
-        return <ChatStackNavigator />;
+        return <ChatScreen navigation={navigation} />;
       case 'Profile':
-        return <ProfileScreen />;
+        return <ProfileStackNavigator navigation={navigation} />;
       case 'Confession':
-        return <ConfessionScreen />;
+        return <ConfessionScreen navigation={navigation} />;
       case 'Notifications':
-        return <NotificationsScreen />;
+        return <NotificationsScreen navigation={navigation} />;
       default:
-        return <SwipeScreen />;
+        return <SwipeScreen navigation={navigation} />;
     }
   };
 

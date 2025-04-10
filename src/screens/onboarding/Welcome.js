@@ -1,16 +1,24 @@
 import React from 'react';
-import { Animated, Easing, Platform } from 'react-native';
+import { Animated, Easing, Platform, Dimensions } from 'react-native';
 import styled from 'styled-components/native';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import theme from '../../styles/theme';
 import Text from '../../components/common/Text';
 import Button from '../../components/common/Button';
+
+const { width, height } = Dimensions.get('window');
 
 const Container = styled.View`
   flex: 1;
   background-color: ${theme.colors.background};
   justify-content: center;
   align-items: center;
-  padding: ${theme.spacing.lg}px;
+  padding: ${hp('5%')}px;
+`;
+
+const StyledButton = styled(Button)`
+  width: ${wp('80%')}px;
+  padding: ${hp('2%')}px;
 `;
 
 const Welcome = ({ navigation }) => {
@@ -51,34 +59,59 @@ const Welcome = ({ navigation }) => {
   return (
     <Container>
       <Animated.View style={{ opacity: titleOpacity }}>
-        <Text variant="h1">Love Is Free</Text>
+        <Text
+          variant="h1"
+          style={{
+            fontSize: wp('4%'), // Responsive font size
+            color: theme.colors.text.primary,
+          }}
+        >
+          Love Is Free
+        </Text>
       </Animated.View>
       <Animated.View
-        style={{ opacity: taglineOpacity, marginTop: theme.spacing.md }}
+        style={{
+          opacity: taglineOpacity,
+          marginTop: hp('2%'), // Responsive margin
+        }}
       >
-        <Text variant="body">Find Your Match Today</Text>
+        <Text
+          variant="body"
+          style={{
+            fontSize: wp('2%'), // Responsive font size
+            color: theme.colors.text.secondary,
+          }}
+        >
+          Find Your Match Today
+        </Text>
       </Animated.View>
       <Animated.View
         style={{
           transform: [{ scale: buttonScale }],
-          marginTop: theme.spacing.xl,
+          marginTop: hp('5%'), // Responsive margin
         }}
       >
-        <Button
+        <StyledButton
           title="Get Started"
           onPress={() => navigation.navigate('SignUp')}
+          textStyle={{
+            fontSize: wp('4.5%'), // Responsive font size
+          }}
         />
       </Animated.View>
       <Animated.View
         style={{
           transform: [{ scale: loginButtonScale }],
-          marginTop: theme.spacing.md,
+          marginTop: hp('2%'), // Responsive margin
         }}
       >
-        <Button
+        <StyledButton
           title="Login"
           onPress={() => navigation.navigate('Login')}
           gradient={false}
+          textStyle={{
+            fontSize: wp('4.5%'), // Responsive font size
+          }}
         />
       </Animated.View>
     </Container>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Animated, Easing, Platform } from 'react-native';
 import styled from 'styled-components/native';
 import theme from '../../styles/theme';
@@ -14,13 +14,38 @@ const Container = styled.View`
   background-color: ${theme.colors.background};
   justify-content: center;
   align-items: center;
-  padding: ${theme.spacing.lg}px;
+  padding: ${theme.spacing.md}px;
+`;
+
+const InputContainer = styled(Animated.View)`
+  margin-bottom: ${theme.spacing.md}px;
+  align-self: center; /* Ensure centering */
+`;
+
+const ErrorWrapper = styled.View`
+  height: 10px; /* Reserve space for general error message */
+  margin-top: ${theme.spacing.sm}px;
+  margin-bottom: ${theme.spacing.md}px;
+`;
+
+const ErrorText = styled(Text)`
+  color: ${theme.colors.accent.red};
+  text-align: center;
+`;
+
+const ButtonContainer = styled(Animated.View)`
+  margin-top: ${theme.spacing.lg}px;
+  align-self: center; /* Ensure centering */
+`;
+
+const SignUpButton = styled(Button)`
+  margin-top: ${theme.spacing.md}px;
 `;
 
 const Login = ({ navigation }) => {
   const setUser = useAuthStore((state) => state.setUser);
   const setToken = useAuthStore((state) => state.setToken);
-  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated); // Add this to update auth state
+  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -33,23 +58,25 @@ const Login = ({ navigation }) => {
   ];
   const loginButtonScale = new Animated.Value(0.9);
 
-  Animated.parallel([
-    ...inputTranslates.map((translate, index) =>
-      Animated.timing(translate, {
-        toValue: 0,
-        duration: 300,
-        delay: index * 100,
-        easing: Easing.inOut(Easing.ease),
+  useEffect(() => {
+    Animated.parallel([
+      ...inputTranslates.map((translate, index) =>
+        Animated.timing(translate, {
+          toValue: 0,
+          duration: 300,
+          delay: index * 100,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: Platform.OS !== 'web',
+        })
+      ),
+      Animated.spring(loginButtonScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
         useNativeDriver: Platform.OS !== 'web',
-      })
-    ),
-    Animated.spring(loginButtonScale, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: Platform.OS !== 'web',
-    }),
-  ]).start();
+      }),
+    ]).start();
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const validateForm = () => {
     const newErrors = {};
@@ -84,33 +111,42 @@ const Login = ({ navigation }) => {
 
           if (!user.isVerified) {
             navigation.navigate('EmailVerification');
+          } else if (!user.selfie) {
+            // If the user doesn't have a selfie, navigate to ProfileSetup
+            navigation.navigate('ProfileSetup');
           } else {
-            // Update authentication state to switch to MainTabs
+            // If the user has a selfie, proceed to MainTabs
             setIsAuthenticated(true);
           }
         }
       }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({
-        general:
-          error.response?.data?.message ||
-          error.message ||
-          'Login failed. Please try again.',
-      });
+      if (error.response && error.response.status === 403) {
+        setErrors({
+          general: 'Verify your account, and try again.',
+        });
+      } else {
+        setErrors({
+          general:
+            error.response?.data?.message ||
+            error.message ||
+            'Login failed. Please try again.',
+        });
+      }
     }
   };
 
   return (
     <Container>
-      <Text variant="h1">Welcome Back</Text>
+      <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
+        Welcome Back
+      </Text>
       {['email', 'password'].map((field, index) => (
-        <Animated.View
+        <InputContainer
           key={field}
           style={{
             transform: [{ translateY: inputTranslates[index] }],
-            width: '100%',
-            marginTop: theme.spacing.sm,
           }}
         >
           <Input
@@ -120,21 +156,20 @@ const Login = ({ navigation }) => {
             error={errors[field]}
             secureTextEntry={field === 'password'}
           />
-        </Animated.View>
+        </InputContainer>
       ))}
-      {errors.general && (
-        <Text style={{ color: theme.colors.accent.red, marginTop: theme.spacing.sm }}>
-          {errors.general}
-        </Text>
-      )}
-      <Animated.View style={{ transform: [{ scale: loginButtonScale }], marginTop: theme.spacing.lg }}>
+      <ErrorWrapper>
+        {errors.general && (
+          <ErrorText>{errors.general}</ErrorText>
+        )}
+      </ErrorWrapper>
+      <ButtonContainer style={{ transform: [{ scale: loginButtonScale }] }}>
         <Button title="Login" onPress={handleLogin} />
-      </Animated.View>
-      <Button
+      </ButtonContainer>
+      <SignUpButton
         title="Sign Up Instead"
         onPress={() => navigation.navigate('SignUp')}
         gradient={false}
-        style={{ marginTop: theme.spacing.md }}
       />
     </Container>
   );

@@ -10,7 +10,7 @@ const Container = styled(TouchableOpacity)`
   padding: ${theme.spacing.lg}px;
   border-bottom-width: 1px;
   border-bottom-color: ${theme.colors.text.secondary}20;
-  background-color: ${theme.colors.text.primary}10;
+  background-color: ${theme.colors.background}; /* Use theme background for contrast */
 `;
 
 const Avatar = styled(Image)`
@@ -20,6 +20,7 @@ const Avatar = styled(Image)`
   margin-right: ${theme.spacing.lg}px;
   border-width: 2px;
   border-color: ${theme.colors.accent.pink};
+  background-color: ${theme.colors.text.secondary}20; /* Fallback background if image fails to load */
 `;
 
 const InfoContainer = styled.View`
@@ -61,7 +62,10 @@ const ChatListItem = ({ chat, onPress }) => {
 
   return (
     <Container onPress={onPress}>
-      <Avatar source={{ uri: otherUser.photo || 'https://via.placeholder.com/60' }} />
+      <Avatar
+        source={{ uri: otherUser.photo || 'https://via.placeholder.com/60' }}
+        onError={(e) => console.log('Error loading avatar:', e.nativeEvent.error)}
+      />
       <InfoContainer>
         <NameContainer>
           <Text variant="h2" style={{ fontSize: 18, color: theme.colors.text.primary }}>
