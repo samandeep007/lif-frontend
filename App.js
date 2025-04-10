@@ -8,11 +8,7 @@ import MainTabs from './src/navigation/MainTabs';
 import theme from './src/styles/theme';
 import useAuthStore from './src/store/authStore';
 import api from './src/api/api';
-import {
-  getItemAsync,
-  setItemAsync,
-  deleteItemAsync,
-} from './src/utils/secureStore';
+import { getItemAsync, setItemAsync, deleteItemAsync } from './src/utils/secureStore';
 
 // Enable screens for React Navigation
 import { enableScreens } from 'react-native-screens';
@@ -20,9 +16,10 @@ enableScreens();
 
 const App = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const setUser = useAuthStore(state => state.setUser);
-  const setToken = useAuthStore(state => state.setToken);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setUser = useAuthStore((state) => state.setUser);
+  const setToken = useAuthStore((state) => state.setToken);
+  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -39,6 +36,9 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Clear token on app load to start fresh (for testing)
+        console.log('Clearing token for testing...');
+        await deleteItemAsync('authToken');
         const token = await getItemAsync('authToken');
         if (token) {
           const response = await api.get('/users/me');
@@ -48,15 +48,19 @@ const App = () => {
             setIsAuthenticated(true);
           } else {
             await deleteItemAsync('authToken');
+            setIsAuthenticated(false);
           }
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Auth check failed:', error.message);
         await deleteItemAsync('authToken');
+        setIsAuthenticated(false);
       }
     };
     checkAuth();
-  }, [setUser, setToken]);
+  }, [setUser, setToken, setIsAuthenticated]);
 
   if (!fontsLoaded) {
     return null; // Wait for fonts to load

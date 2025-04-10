@@ -18,15 +18,19 @@ const Container = styled.View`
 `;
 
 const Login = ({ navigation }) => {
-  const setUser = useAuthStore(state => state.setUser);
-  const setToken = useAuthStore(state => state.setToken);
+  const setUser = useAuthStore((state) => state.setUser);
+  const setToken = useAuthStore((state) => state.setToken);
+  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated); // Add this to update auth state
   const [form, setForm] = useState({
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
 
-  const inputTranslates = [new Animated.Value(50), new Animated.Value(50)];
+  const inputTranslates = [
+    new Animated.Value(50),
+    new Animated.Value(50),
+  ];
   const loginButtonScale = new Animated.Value(0.9);
 
   Animated.parallel([
@@ -80,10 +84,9 @@ const Login = ({ navigation }) => {
 
           if (!user.isVerified) {
             navigation.navigate('EmailVerification');
-          } else if (!user.photos || user.photos.length === 0 || !user.bio) {
-            navigation.navigate('ProfileSetup');
           } else {
-            navigation.replace('MainTabs');
+            // Update authentication state to switch to MainTabs
+            setIsAuthenticated(true);
           }
         }
       }
@@ -112,7 +115,7 @@ const Login = ({ navigation }) => {
         >
           <Input
             value={form[field]}
-            onChangeText={text => setForm({ ...form, [field]: text })}
+            onChangeText={(text) => setForm({ ...form, [field]: text })}
             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
             error={errors[field]}
             secureTextEntry={field === 'password'}
@@ -120,21 +123,11 @@ const Login = ({ navigation }) => {
         </Animated.View>
       ))}
       {errors.general && (
-        <Text
-          style={{
-            color: theme.colors.accent.red,
-            marginTop: theme.spacing.sm,
-          }}
-        >
+        <Text style={{ color: theme.colors.accent.red, marginTop: theme.spacing.sm }}>
           {errors.general}
         </Text>
       )}
-      <Animated.View
-        style={{
-          transform: [{ scale: loginButtonScale }],
-          marginTop: theme.spacing.lg,
-        }}
-      >
+      <Animated.View style={{ transform: [{ scale: loginButtonScale }], marginTop: theme.spacing.lg }}>
         <Button title="Login" onPress={handleLogin} />
       </Animated.View>
       <Button
