@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message'; // Add Toast import
 import OnboardingStack from './src/navigation/OnboardingStack';
 import MainTabs from './src/navigation/MainTabs';
 import theme from './src/styles/theme';
@@ -71,6 +72,7 @@ const App = () => {
       <NavigationContainer>
         <StatusBar style="light" backgroundColor={theme.colors.background} />
         {isAuthenticated ? <MainTabs /> : <OnboardingStack />}
+        <Toast ref={(ref) => Toast.setRef(ref)} /> {/* Add Toast component */}
       </NavigationContainer>
     </SafeAreaProvider>
   );
