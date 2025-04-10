@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-export const getItemAsync = async (key) => {
+export const getItemAsync = async key => {
   if (Platform.OS === 'web') {
     return localStorage.getItem(key);
   }
@@ -25,7 +25,7 @@ export const setItemAsync = async (key, value) => {
   }
 };
 
-export const deleteItemAsync = async (key) => {
+export const deleteItemAsync = async key => {
   if (Platform.OS === 'web') {
     localStorage.removeItem(key);
     return;

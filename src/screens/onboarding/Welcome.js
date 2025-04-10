@@ -53,13 +53,28 @@ const Welcome = ({ navigation }) => {
       <Animated.View style={{ opacity: titleOpacity }}>
         <Text variant="h1">Love Is Free</Text>
       </Animated.View>
-      <Animated.View style={{ opacity: taglineOpacity, marginTop: theme.spacing.md }}>
+      <Animated.View
+        style={{ opacity: taglineOpacity, marginTop: theme.spacing.md }}
+      >
         <Text variant="body">Find Your Match Today</Text>
       </Animated.View>
-      <Animated.View style={{ transform: [{ scale: buttonScale }], marginTop: theme.spacing.xl }}>
-        <Button title="Get Started" onPress={() => navigation.navigate('SignUp')} />
+      <Animated.View
+        style={{
+          transform: [{ scale: buttonScale }],
+          marginTop: theme.spacing.xl,
+        }}
+      >
+        <Button
+          title="Get Started"
+          onPress={() => navigation.navigate('SignUp')}
+        />
       </Animated.View>
-      <Animated.View style={{ transform: [{ scale: loginButtonScale }], marginTop: theme.spacing.md }}>
+      <Animated.View
+        style={{
+          transform: [{ scale: loginButtonScale }],
+          marginTop: theme.spacing.md,
+        }}
+      >
         <Button
           title="Login"
           onPress={() => navigation.navigate('Login')}

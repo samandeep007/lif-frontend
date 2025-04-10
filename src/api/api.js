@@ -10,7 +10,7 @@ const api = axios.create({
 
 // Add token to requests if available
 api.interceptors.request.use(
-  async (config) => {
+  async config => {
     try {
       const token = await getItemAsync('authToken');
       if (token) {
@@ -21,7 +21,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  error => Promise.reject(error)
 );
 
 export default api;

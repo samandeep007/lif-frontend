@@ -18,8 +18,8 @@ const Container = styled.View`
 `;
 
 const EmailVerification = ({ navigation, formData }) => {
-  const setUser = useAuthStore((state) => state.setUser);
-  const setToken = useAuthStore((state) => state.setToken);
+  const setUser = useAuthStore(state => state.setUser);
+  const setToken = useAuthStore(state => state.setToken);
   const [isVerified, setIsVerified] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -53,7 +53,10 @@ const EmailVerification = ({ navigation, formData }) => {
           await setItemAsync('authToken', response.data.data.token);
         }
       } catch (error) {
-        console.log('Verification check failed:', error.response?.data?.message || error.message);
+        console.log(
+          'Verification check failed:',
+          error.response?.data?.message || error.message
+        );
       }
     };
 
@@ -79,7 +82,9 @@ const EmailVerification = ({ navigation, formData }) => {
         console.log('Resend email successful:', response.data.message);
       }
     } catch (error) {
-      setErrors({ general: error.response?.data?.message || 'Failed to resend email' });
+      setErrors({
+        general: error.response?.data?.message || 'Failed to resend email',
+      });
     }
   };
 
@@ -87,16 +92,29 @@ const EmailVerification = ({ navigation, formData }) => {
     <Container>
       <Animated.View style={{ opacity: messageOpacity }}>
         <Text variant="h1">Check Your Email</Text>
-        <Text variant="body" style={{ marginTop: theme.spacing.md, textAlign: 'center' }}>
+        <Text
+          variant="body"
+          style={{ marginTop: theme.spacing.md, textAlign: 'center' }}
+        >
           We’ve sent a verification link to your email.
         </Text>
       </Animated.View>
       {errors.general && (
-        <Text style={{ color: theme.colors.accent.red, marginTop: theme.spacing.sm }}>
+        <Text
+          style={{
+            color: theme.colors.accent.red,
+            marginTop: theme.spacing.sm,
+          }}
+        >
           {errors.general}
         </Text>
       )}
-      <Animated.View style={{ transform: [{ scale: resendButtonScale }], marginTop: theme.spacing.lg }}>
+      <Animated.View
+        style={{
+          transform: [{ scale: resendButtonScale }],
+          marginTop: theme.spacing.lg,
+        }}
+      >
         <Button
           title="Resend Email"
           onPress={() => {

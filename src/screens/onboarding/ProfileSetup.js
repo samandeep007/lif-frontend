@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { Animated, Easing, Image, TouchableOpacity, TextInput, Platform } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+} from 'react-native';
 import styled from 'styled-components/native';
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons'; // Add this import
 import theme from '../../styles/theme';
 import Text from '../../components/common/Text';
 import Button from '../../components/common/Button';
@@ -49,7 +57,7 @@ const BioInput = styled(TextInput)`
 `;
 
 const ProfileSetup = ({ navigation }) => {
-  const setUser = useAuthStore((state) => state.setUser);
+  const setUser = useAuthStore(state => state.setUser);
   const [photo, setPhoto] = useState(null);
   const [bio, setBio] = useState('');
   const [errors, setErrors] = useState({});
@@ -80,7 +88,8 @@ const ProfileSetup = ({ navigation }) => {
   ]).start();
 
   const handlePhotoUpload = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       alert('Permission to access media library is required!');
       return;
@@ -125,14 +134,21 @@ const ProfileSetup = ({ navigation }) => {
         }
       }
     } catch (error) {
-      setErrors({ general: error.response?.data?.message || 'Profile setup failed' });
+      setErrors({
+        general: error.response?.data?.message || 'Profile setup failed',
+      });
     }
   };
 
   return (
     <Container>
       <Text variant="h1">Set Up Your Profile</Text>
-      <Animated.View style={{ transform: [{ scale: photoScale }], marginTop: theme.spacing.md }}>
+      <Animated.View
+        style={{
+          transform: [{ scale: photoScale }],
+          marginTop: theme.spacing.md,
+        }}
+      >
         <PhotoUploadContainer onPress={handlePhotoUpload}>
           {photo ? (
             <Photo source={{ uri: photo }} />
@@ -141,7 +157,9 @@ const ProfileSetup = ({ navigation }) => {
           )}
         </PhotoUploadContainer>
       </Animated.View>
-      <Animated.View style={{ transform: [{ translateY: bioTranslate }], width: '100%' }}>
+      <Animated.View
+        style={{ transform: [{ translateY: bioTranslate }], width: '100%' }}
+      >
         <BioInput
           value={bio}
           onChangeText={setBio}
@@ -151,11 +169,21 @@ const ProfileSetup = ({ navigation }) => {
         />
       </Animated.View>
       {errors.general && (
-        <Text style={{ color: theme.colors.accent.red, marginTop: theme.spacing.sm }}>
+        <Text
+          style={{
+            color: theme.colors.accent.red,
+            marginTop: theme.spacing.sm,
+          }}
+        >
           {errors.general}
         </Text>
       )}
-      <Animated.View style={{ transform: [{ scale: continueButtonScale }], marginTop: theme.spacing.lg }}>
+      <Animated.View
+        style={{
+          transform: [{ scale: continueButtonScale }],
+          marginTop: theme.spacing.lg,
+        }}
+      >
         <Button
           title="Continue"
           onPress={() => {

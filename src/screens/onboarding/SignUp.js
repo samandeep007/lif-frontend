@@ -113,7 +113,7 @@ const SignUp = ({ navigation, setFormData }) => {
         >
           <Input
             value={form[field]}
-            onChangeText={(text) => setForm({ ...form, [field]: text })}
+            onChangeText={text => setForm({ ...form, [field]: text })}
             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
             error={errors[field]}
             secureTextEntry={field === 'password'}
@@ -121,11 +121,21 @@ const SignUp = ({ navigation, setFormData }) => {
         </Animated.View>
       ))}
       {errors.general && (
-        <Text style={{ color: theme.colors.accent.red, marginTop: theme.spacing.sm }}>
+        <Text
+          style={{
+            color: theme.colors.accent.red,
+            marginTop: theme.spacing.sm,
+          }}
+        >
           {errors.general}
         </Text>
       )}
-      <Animated.View style={{ transform: [{ scale: signUpButtonScale }], marginTop: theme.spacing.lg }}>
+      <Animated.View
+        style={{
+          transform: [{ scale: signUpButtonScale }],
+          marginTop: theme.spacing.lg,
+        }}
+      >
         <Button title="Sign Up" onPress={handleSignUp} />
       </Animated.View>
     </Container>

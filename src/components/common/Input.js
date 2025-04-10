@@ -26,7 +26,13 @@ const ErrorText = styled.Text`
   margin-top: ${theme.spacing.xs}px;
 `;
 
-const Input = ({ value, onChangeText, placeholder, error, secureTextEntry }) => {
+const Input = ({
+  value,
+  onChangeText,
+  placeholder,
+  error,
+  secureTextEntry,
+}) => {
   return (
     <>
       <InputContainer>

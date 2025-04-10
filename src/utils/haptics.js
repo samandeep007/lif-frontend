@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
-export const triggerHaptic = (type) => {
+export const triggerHaptic = type => {
   if (Platform.OS === 'web') {
     return; // Haptics are not supported on web, so we return early
   }

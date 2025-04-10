@@ -39,11 +39,19 @@ const FinalWelcome = ({ navigation }) => {
       <ConfettiCannon count={200} origin={{ x: -10, y: 0 }} />
       <Animated.View style={{ opacity: welcomeOpacity }}>
         <Text variant="h1">Welcome to L.I.F!</Text>
-        <Text variant="body" style={{ marginTop: theme.spacing.md, textAlign: 'center' }}>
+        <Text
+          variant="body"
+          style={{ marginTop: theme.spacing.md, textAlign: 'center' }}
+        >
           Let’s find your match!
         </Text>
       </Animated.View>
-      <Animated.View style={{ transform: [{ scale: finalButtonScale }], marginTop: theme.spacing.lg }}>
+      <Animated.View
+        style={{
+          transform: [{ scale: finalButtonScale }],
+          marginTop: theme.spacing.lg,
+        }}
+      >
         <Button
           title="Start Swiping"
           onPress={() => {

@@ -10,7 +10,7 @@ import { triggerHaptic } from '../utils/haptics';
 const MainTabs = () => {
   const [activeTab, setActiveTab] = useState('Swipe');
 
-  const handleTabPress = (tabName) => {
+  const handleTabPress = tabName => {
     triggerHaptic('light');
     setActiveTab(tabName);
   };

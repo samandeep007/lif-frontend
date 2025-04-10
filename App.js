@@ -8,7 +8,11 @@ import MainTabs from './src/navigation/MainTabs';
 import theme from './src/styles/theme';
 import useAuthStore from './src/store/authStore';
 import api from './src/api/api';
-import { getItemAsync, setItemAsync, deleteItemAsync } from './src/utils/secureStore';
+import {
+  getItemAsync,
+  setItemAsync,
+  deleteItemAsync,
+} from './src/utils/secureStore';
 
 // Enable screens for React Navigation
 import { enableScreens } from 'react-native-screens';
@@ -17,8 +21,8 @@ enableScreens();
 const App = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
-  const setToken = useAuthStore((state) => state.setToken);
+  const setUser = useAuthStore(state => state.setUser);
+  const setToken = useAuthStore(state => state.setToken);
 
   useEffect(() => {
     const loadFonts = async () => {
