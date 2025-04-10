@@ -292,14 +292,14 @@ const ProfileSetup = ({ navigation }) => {
           <PhotoWrapper key={photo._id}>
             <GridPhoto source={{ uri: photo.url }} />
             <DeletePhotoButton onPress={() => handleDeletePhoto(photo._id)}>
-              <Ionicons name="close-circle" size={16} color={theme.colors.text.primary} /> /* Reduced icon size */
+              <Ionicons name="close-circle" size={16} color={theme.colors.text.primary} /> 
             </DeletePhotoButton>
           </PhotoWrapper>
         ))}
         {photos.length < 9 && (
           <AddPhotoButton onPress={() => handlePhotoUpload(false)}>
             <Ionicons name="add" size={32} color={theme.colors.text.secondary} /> 
-            <Text style={{ color: theme.colors.text.secondary, marginTop: theme.spacing.xs, fontSize: 12 /* Reduced font size */ }}>
+            <Text style={{ color: theme.colors.text.secondary, marginTop: theme.spacing.xs, fontSize: 12  }}>
               Add Photo
             </Text>
           </AddPhotoButton>
