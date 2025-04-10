@@ -4,30 +4,21 @@ import styled from 'styled-components/native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
   withSpring,
   withTiming,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { LinearGradient } from 'expo-linear-gradient'; // Add this import
+import { PanGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import theme from '../styles/theme';
 import Text from './common/Text';
 import { triggerHaptic } from '../utils/haptics';
+import UserDetailsModal from './UserDetailsModal'; // Import the new modal component
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.25;
-const SWIPE_OUT_DURATION = 250;
-
-const CardContainer = styled(Animated.View)`
-  width: ${SCREEN_WIDTH - 40}px;
-  height: ${SCREEN_HEIGHT * 0.6}px;
-  border-radius: ${theme.borderRadius.large}px;
-  position: absolute;
-  background-color: ${theme.colors.text.primary};
-  overflow: hidden;
-`;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.2; // 20% of screen width
+const SWIPE_OUT_DURATION = 300; // 300 milliseconds for a snappy feel
 
 const CardImage = styled(Image)`
   width: 100%;
@@ -48,13 +39,16 @@ const InfoContainer = styled.View`
   left: 20px;
 `;
 
-const OverlayText = styled(Animated.Text)`
+const Overlay = styled(Animated.View)`
   position: absolute;
-  top: 50px;
-  font-family: Poppins-Bold;
-  font-size: 40px;
-  color: ${props => props.color};
-  transform: rotate(-20deg);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: ${props => props.color};
+  justify-content: center;
+  align-items: center;
+  z-index: 10; /* Ensure the overlay is above other elements */
 `;
 
 const StarBurst = styled(Animated.View)`
@@ -66,6 +60,7 @@ const StarBurst = styled(Animated.View)`
   background-color: ${theme.colors.accent.yellow};
   border-radius: 50px;
   transform: translateX(-50px) translateY(-50px);
+  z-index: 10; /* Ensure the starburst is above other elements */
 `;
 
 const SwipeCard = ({ user, onSwipe, index }) => {
@@ -75,84 +70,99 @@ const SwipeCard = ({ user, onSwipe, index }) => {
   const overlayOpacity = useSharedValue(0);
   const starBurstOpacity = useSharedValue(0);
   const starBurstScale = useSharedValue(0);
-  const [overlayText, setOverlayText] = useState('');
-  const [overlayColor, setOverlayColor] = useState('');
+  const [overlayColor, setOverlayColor] = useState(null);
+  const [overlayIcon, setOverlayIcon] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
 
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: () => {},
-    onActive: event => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-      rotate.value = (event.translationX / (SCREEN_WIDTH / 2)) * 10; // Rotate up to 10 degrees
+  // Use user.photos[0]?.url if available, otherwise use user.selfie, with a fallback
+  const imageUrl = user.photos && user.photos.length > 0 && user.photos[0]?.url
+    ? user.photos[0].url
+    : user.selfie || 'https://via.placeholder.com/300';
+  console.log(`SwipeCard image URL for user ${user._id}:`, imageUrl);
 
-      const swipeDirection = event.translationX > 0 ? 'right' : 'left';
-      const opacity = Math.abs(event.translationX) / SWIPE_THRESHOLD;
+  const onHandlerStateChange = (event) => {
+    const { translationX, translationY, state } = event.nativeEvent;
 
-      if (event.translationX > 50) {
-        runOnJS(setOverlayText)('LIKE');
-        runOnJS(setOverlayColor)(theme.colors.accent.green);
-      } else if (event.translationX < -50) {
-        runOnJS(setOverlayText)('NOPE');
-        runOnJS(setOverlayColor)(theme.colors.accent.red);
+    if (state === State.ACTIVE) {
+      console.log(`Gesture active for user ${user._id}: translationX=${translationX}, translationY=${translationY}`);
+      translateX.value = translationX;
+      translateY.value = translationY;
+      rotate.value = (translationX / (SCREEN_WIDTH / 2)) * 10; // Rotate up to 10 degrees during drag
+
+      const swipeDirection = translationX > 0 ? 'right' : 'left';
+      const opacity = Math.abs(translationX) / (SWIPE_THRESHOLD * 0.5); // Reduced denominator to make opacity increase faster
+
+      if (translationX > 40) {
+        console.log(`Setting overlay to LIKE: opacity=${opacity}`);
+        setOverlayColor(`${theme.colors.accent.green}80`);
+        setOverlayIcon('heart');
+      } else if (translationX < -40) {
+        console.log(`Setting overlay to NOPE: opacity=${opacity}`);
+        setOverlayColor(`${theme.colors.accent.red}80`);
+        setOverlayIcon('close');
       } else {
-        runOnJS(setOverlayText)('');
-        runOnJS(setOverlayColor)('');
+        console.log(`Clearing overlay: opacity=${opacity}`);
+        setOverlayColor(null);
+        setOverlayIcon(null);
       }
 
       overlayOpacity.value = opacity > 1 ? 1 : opacity;
-    },
-    onEnd: event => {
-      if (event.translationX > SWIPE_THRESHOLD) {
-        translateX.value = withTiming(
-          SCREEN_WIDTH,
-          { duration: SWIPE_OUT_DURATION },
-          () => {
-            runOnJS(onSwipe)('right', user);
-            runOnJS(triggerHaptic)('medium');
-          }
-        );
-      } else if (event.translationX < -SWIPE_THRESHOLD) {
-        translateX.value = withTiming(
-          -SCREEN_WIDTH,
-          { duration: SWIPE_OUT_DURATION },
-          () => {
-            runOnJS(onSwipe)('left', user);
-            runOnJS(triggerHaptic)('medium');
-          }
-        );
+    } else if (state === State.END) {
+      console.log(`Gesture ended for user ${user._id}: translationX=${translationX}, translationY=${translationY}`);
+      if (translationX > SWIPE_THRESHOLD) {
+        console.log(`Swiping right on user ${user._id}`);
+        onSwipe('right', user);
+        triggerHaptic('medium');
+        // Animate translateX, translateY, and rotate for a "like" swipe with a curved trajectory
+        translateX.value = withTiming(SCREEN_WIDTH, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) });
+        translateY.value = withTiming(-SCREEN_HEIGHT * 0.2, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) }); // Slight upward arc
+        rotate.value = withTiming((translationX / (SCREEN_WIDTH / 2)) * 30, { duration: SWIPE_OUT_DURATION }); // Dynamic rotation up to 60 degrees
+      } else if (translationX < -SWIPE_THRESHOLD) {
+        console.log(`Swiping left on user ${user._id}`);
+        onSwipe('left', user);
+        triggerHaptic('medium');
+        // Animate translateX, translateY, and rotate for a "pass" swipe with a curved trajectory
+        translateX.value = withTiming(-SCREEN_WIDTH, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) });
+        translateY.value = withTiming(-SCREEN_HEIGHT * 0.2, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) }); // Slight upward arc
+        rotate.value = withTiming((translationX / (SCREEN_WIDTH / 2)) * 30, { duration: SWIPE_OUT_DURATION }); // Dynamic rotation up to -60 degrees
       } else if (
-        Math.abs(event.translationX) > 50 &&
-        Math.abs(event.translationY) > 50
+        Math.abs(translationX) > 40 &&
+        Math.abs(translationY) > 40
       ) {
-        // Super Like (swipe up)
-        starBurstOpacity.value = withTiming(1, { duration: 200 });
+        console.log(`Swiping up (super like) on user ${user._id}`);
+        starBurstOpacity.value = withTiming(1, { duration: 300 });
         starBurstScale.value = withSpring(
           1.5,
           { damping: 10, stiffness: 100 },
           () => {
-            starBurstOpacity.value = withTiming(0, { duration: 200 });
+            starBurstOpacity.value = withTiming(0, { duration: 300 });
             starBurstScale.value = withTiming(0);
-            translateX.value = withTiming(
-              0,
-              { duration: SWIPE_OUT_DURATION },
-              () => {
-                runOnJS(onSwipe)('super', user);
-                runOnJS(triggerHaptic)('success');
-              }
-            );
+            translateX.value = withTiming(0, { duration: SWIPE_OUT_DURATION });
+            translateY.value = withTiming(0, { duration: SWIPE_OUT_DURATION });
+            rotate.value = withTiming(0, { duration: SWIPE_OUT_DURATION }); // Reset rotation for super like
           }
         );
+        onSwipe('super', user);
+        triggerHaptic('success');
       } else {
+        console.log(`Swipe cancelled for user ${user._id}`);
         translateX.value = withSpring(0);
         translateY.value = withSpring(0);
         rotate.value = withSpring(0);
         overlayOpacity.value = withTiming(0, { duration: 200 });
-        runOnJS(setOverlayText)('');
-        runOnJS(setOverlayColor)('');
+        setOverlayColor(null);
+        setOverlayIcon(null);
       }
-    },
-  });
+    }
+  };
+
+  const onTapHandlerStateChange = ({ nativeEvent }) => {
+    if (nativeEvent.state === State.END) {
+      console.log(`Card tapped for user ${user._id}`);
+      setModalVisible(true);
+    }
+  };
 
   const cardStyle = useAnimatedStyle(() => {
     return {
@@ -162,6 +172,12 @@ const SwipeCard = ({ user, onSwipe, index }) => {
         { rotate: `${rotate.value}deg` },
       ],
       zIndex: -index,
+      width: SCREEN_WIDTH - 40,
+      height: SCREEN_HEIGHT * 0.6,
+      borderRadius: theme.borderRadius.large,
+      position: 'absolute',
+      backgroundColor: theme.colors.text.primary,
+      overflow: 'hidden',
     };
   });
 
@@ -179,52 +195,62 @@ const SwipeCard = ({ user, onSwipe, index }) => {
   });
 
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
-      <CardContainer style={cardStyle}>
-        {!imageLoaded && (
-          <ActivityIndicator
-            size="large"
-            color={theme.colors.accent.pink}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: [{ translateX: -15 }, { translateY: -15 }],
-            }}
-          />
-        )}
-        <CardImage
-          source={{ uri: user.photos[0] || 'https://via.placeholder.com/300' }}
-          onLoad={() => setImageLoaded(true)}
-        />
-        <GradientOverlay>
-          <LinearGradient
-            colors={['rgba(0, 0, 0, 0.8)', 'transparent']}
-            style={{
-              flex: 1,
-            }}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 0, y: 0 }}
-          />
-        </GradientOverlay>
-        <InfoContainer>
-          <Text variant="h2">{`${user.name}, ${user.age}`}</Text>
-          <Text variant="body">{user.bio || 'No bio available'}</Text>
-        </InfoContainer>
-        {overlayText ? (
-          <OverlayText
-            style={[
-              overlayStyle,
-              { [overlayText === 'LIKE' ? 'right' : 'left']: 50 },
-            ]}
-            color={overlayColor}
-          >
-            {overlayText}
-          </OverlayText>
-        ) : null}
-        <StarBurst style={starBurstStyle} />
-      </CardContainer>
-    </PanGestureHandler>
+    <>
+      <TapGestureHandler onHandlerStateChange={onTapHandlerStateChange}>
+        <PanGestureHandler onHandlerStateChange={onHandlerStateChange}>
+          <Animated.View style={cardStyle}>
+            {!imageLoaded && (
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.accent.pink}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: [{ translateX: -15 }, { translateY: -15 }],
+                }}
+              />
+            )}
+            <CardImage
+              source={{ uri: imageUrl }}
+              onLoad={() => {
+                console.log(`Image loaded for user ${user._id}`);
+                setImageLoaded(true);
+              }}
+              onError={(e) => {
+                console.error(`Image failed to load for user ${user._id}:`, e.nativeEvent.error);
+                setImageLoaded(true); // Treat as loaded to hide the ActivityIndicator
+              }}
+            />
+            <GradientOverlay>
+              <LinearGradient
+                colors={['rgba(0, 0, 0, 0.8)', 'transparent']}
+                style={{
+                  flex: 1,
+                }}
+                start={{ x: 0, y: 1 }}
+                end={{ x: 0, y: 0 }}
+              />
+            </GradientOverlay>
+            <InfoContainer>
+              <Text variant="h2">{`${user.name}, ${user.age}`}</Text>
+              <Text variant="body">{user.bio || 'No bio available'}</Text>
+            </InfoContainer>
+            {overlayColor && overlayIcon ? (
+              <Overlay style={overlayStyle} color={overlayColor}>
+                <Ionicons name={overlayIcon} size={80} color="#fff" />
+              </Overlay>
+            ) : null}
+            <StarBurst style={starBurstStyle} />
+          </Animated.View>
+        </PanGestureHandler>
+      </TapGestureHandler>
+      <UserDetailsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        user={user}
+      />
+    </>
   );
 };
 

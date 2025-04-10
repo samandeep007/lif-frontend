@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Add this import
+import { Ionicons } from '@expo/vector-icons';
 import styled from 'styled-components/native';
 import theme from '../styles/theme';
 import Text from '../components/common/Text';
@@ -113,14 +113,22 @@ const NotificationsScreen = () => {
           onPress: async () => {
             try {
               const response = await api.delete('/notifications');
+              console.log('Clear notifications response:', response.data);
               if (response.data.success) {
                 setNotifications([]);
                 setErrorMessage(null);
                 triggerHaptic('success');
+              } else {
+                setErrorMessage('Failed to clear notifications: ' + (response.data.message || 'Unknown error'));
               }
             } catch (error) {
-              console.error('Error clearing notifications:', error);
-              setErrorMessage('Failed to clear notifications: ' + (error.message || 'Network error'));
+              console.error('Error clearing notifications:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                headers: error.response?.headers,
+              });
+              setErrorMessage('Failed to clear notifications: ' + (error.response?.data?.message || error.message || 'Network error'));
             }
           },
         },

@@ -96,8 +96,9 @@ const SwipeScreen = () => {
   }, []);
 
   const handleSwipe = async (direction, swipedUser) => {
-    console.log('Swiping user:', swipedUser);
+    console.log('handleSwipe called with direction:', direction, 'for user:', swipedUser);
     if (!swipedUser || !swipedUser._id) {
+      console.error('Invalid user data in handleSwipe:', swipedUser);
       setError('Invalid user data. Cannot swipe.');
       setCurrentIndex(currentIndex + 1);
       return;
@@ -116,10 +117,11 @@ const SwipeScreen = () => {
         targetId: swipedUser._id,
         direction: backendDirection,
       });
-      if (response.data.success && response.data.data.isMatch) {
+      console.log('Swipe recorded:', response.data);
+      if (response.data.success && response.data.data?.isMatch) {
         setCurrentMatch({
-          user1Photo: user.photos[0],
-          user2Photo: swipedUser.photos[0],
+          user1Photo: user.selfie || (user.photos && user.photos.length > 0 ? user.photos[0].url : 'https://via.placeholder.com/300'),
+          user2Photo: swipedUser.selfie || (swipedUser.photos && swipedUser.photos.length > 0 ? swipedUser.photos[0].url : 'https://via.placeholder.com/300'),
           user2Name: swipedUser.name,
         });
         setMatchModalVisible(true);
