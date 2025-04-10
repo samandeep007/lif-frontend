@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Permissions from 'react-native-permissions';
-import { mediaDevices, RTCPeerConnection, RTCView, RTCIceCandidate, RTCSessionDescription } from 'react-native-webrtc';
+import RtcEngine, { RtcLocalView, RtcRemoteView, VideoRenderMode } from 'react-native-agora';
 import api from '../api/api';
 import styled from 'styled-components/native';
 import theme from '../styles/theme';
@@ -18,11 +18,11 @@ const VideoContainer = styled.View`
   position: relative;
 `;
 
-const RemoteVideo = styled(RTCView)`
+const RemoteVideo = styled(RtcRemoteView)`
   flex: 1;
 `;
 
-const LocalVideo = styled(RTCView)`
+const LocalVideo = styled(RtcLocalView)`
   position: absolute;
   top: 20px;
   right: 20px;
@@ -44,17 +44,9 @@ const CallScreen = ({ route }) => {
   const { userId, matchId, callType, otherUserName, isIncoming, senderId } = route.params;
   const navigation = useNavigation();
   const [callStatus, setCallStatus] = useState(isIncoming ? 'incoming' : 'initiating');
-  const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
-  const peerConnectionRef = useRef(null);
+  const [remoteUid, setRemoteUid] = useState(null);
+  const [engine, setEngine] = useState(null);
   const socketRef = useRef(null);
-
-  const configuration = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' }, // Free Google STUN server
-      { urls: 'stun:stun1.l.google.com:19302' },
-    ],
-  };
 
   useEffect(() => {
     const setupSocket = () => {
@@ -64,53 +56,13 @@ const CallScreen = ({ route }) => {
       });
 
       socketRef.current.on('connect', () => {
-        console.log('Connected to socket for WebRTC signaling');
-      });
-
-      socketRef.current.on('offer', async ({ callId, offer, fromUserId }) => {
-        if (callId === matchId && callStatus === 'incoming') {
-          peerConnectionRef.current = new RTCPeerConnection(configuration);
-          peerConnectionRef.current.ontrack = (event) => {
-            setRemoteStream(event.streams[0]);
-          };
-          peerConnectionRef.current.onicecandidate = (event) => {
-            if (event.candidate) {
-              socketRef.current.emit('ice-candidate', {
-                callId,
-                candidate: event.candidate,
-                toUserId: fromUserId,
-              });
-            }
-          };
-
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-
-          socketRef.current.emit('answer', {
-            callId,
-            answer,
-            toUserId: fromUserId,
-          });
-        }
-      });
-
-      socketRef.current.on('answer', async ({ callId, answer }) => {
-        if (callId === matchId && callStatus === 'initiating') {
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-          setCallStatus('active');
-        }
-      });
-
-      socketRef.current.on('ice-candidate', async ({ callId, candidate }) => {
-        if (callId === matchId && peerConnectionRef.current) {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        }
+        console.log('Connected to socket for Agora signaling');
       });
 
       socketRef.current.on('call_accepted', ({ callId, matchId: incomingMatchId, callType: incomingCallType, receiverId }) => {
         if (incomingMatchId === matchId && userId === receiverId) {
           setCallStatus('active');
+          joinChannel();
         }
       });
 
@@ -149,76 +101,64 @@ const CallScreen = ({ route }) => {
       }
     };
 
-    const setupLocalStream = async () => {
-      try {
-        const stream = await mediaDevices.getUserMedia({
-          audio: true,
-          video: callType === 'video',
-        });
-        setLocalStream(stream);
-        return stream;
-      } catch (error) {
-        console.error('Error accessing media devices:', error);
-        Alert.alert('Media Error', 'Unable to access camera or microphone.');
+    const initAgora = async () => {
+      const appId = process.env.AGORA_APP_ID;
+      if (!appId) {
+        Alert.alert('Configuration Error', 'Agora App ID is not set.');
         navigation.goBack();
+        return;
+      }
+
+      const rtcEngine = await RtcEngine.create(appId);
+      setEngine(rtcEngine);
+
+      rtcEngine.enableVideo();
+      rtcEngine.enableAudio();
+
+      rtcEngine.addListener('UserJoined', (uid) => {
+        setRemoteUid(uid);
+      });
+
+      rtcEngine.addListener('UserOffline', () => {
+        setRemoteUid(null);
+        cleanup();
+        navigation.goBack();
+      });
+
+      rtcEngine.addListener('Error', (err) => {
+        console.error('Agora Error:', err);
+        Alert.alert('Call Error', 'An error occurred during the call.');
+        cleanup();
+        navigation.goBack();
+      });
+
+      if (!isIncoming) {
+        joinChannel();
       }
     };
 
-    const initiateWebRTCCall = async () => {
-      const stream = await setupLocalStream();
-      if (!stream) return;
-
-      peerConnectionRef.current = new RTCPeerConnection(configuration);
-      peerConnectionRef.current.ontrack = (event) => {
-        setRemoteStream(event.streams[0]);
-      };
-      peerConnectionRef.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          socketRef.current.emit('ice-candidate', {
-            callId: matchId,
-            candidate: event.candidate,
-            toUserId: senderId,
-          });
-        }
-      };
-
-      stream.getTracks().forEach(track => peerConnectionRef.current.addTrack(track, stream));
-
-      const offer = await peerConnectionRef.current.createOffer();
-      await peerConnectionRef.current.setLocalDescription(offer);
-
-      socketRef.current.emit('offer', {
-        callId: matchId,
-        offer,
-        toUserId: senderId,
-      });
+    const joinChannel = async () => {
+      if (engine) {
+        await engine.joinChannel(null, matchId, null, parseInt(userId));
+      }
     };
 
     requestPermissions();
     setupSocket();
-
-    if (!isIncoming) {
-      initiateWebRTCCall();
-    }
+    initAgora();
 
     return () => {
       cleanup();
     };
-  }, [isIncoming, matchId, callType, senderId, navigation]);
+  }, [isIncoming, matchId, callType, userId, senderId, navigation]);
 
   const cleanup = () => {
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-      setLocalStream(null);
+    if (engine) {
+      engine.leaveChannel();
+      engine.destroy();
+      setEngine(null);
     }
-    if (remoteStream) {
-      remoteStream.getTracks().forEach(track => track.stop());
-      setRemoteStream(null);
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
+    setRemoteUid(null);
   };
 
   const handleAcceptCall = async () => {
@@ -226,6 +166,7 @@ const CallScreen = ({ route }) => {
       const response = await api.post('/calls/accept', { callId: matchId });
       if (response.data.success) {
         setCallStatus('active');
+        joinChannel();
       }
     } catch (error) {
       console.error('Error accepting call:', error);
@@ -307,15 +248,17 @@ const CallScreen = ({ route }) => {
   return (
     <Container>
       <VideoContainer>
-        {remoteStream && (
+        {remoteUid && (
           <RemoteVideo
-            streamURL={remoteStream.toURL()}
+            streamURL={remoteUid.toString()}
+            renderMode={VideoRenderMode.Hidden}
             style={{ flex: 1 }}
           />
         )}
-        {localStream && callType === 'video' && (
+        {callType === 'video' && (
           <LocalVideo
-            streamURL={localStream.toURL()}
+            streamURL={userId.toString()}
+            renderMode={VideoRenderMode.Hidden}
             style={{ position: 'absolute', top: 20, right: 20, width: 120, height: 160 }}
           />
         )}
