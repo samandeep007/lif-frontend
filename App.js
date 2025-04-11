@@ -37,10 +37,9 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Clear token on app load to start fresh (for testing)
-        console.log('Clearing token for testing...');
-        await deleteItemAsync('authToken');
         const token = await getItemAsync('authToken');
+        // console.log('Clearing token for testing...');
+        // await deleteItemAsync('authToken');
         if (token) {
           const response = await api.get('/users/me');
           if (response.data.success) {
