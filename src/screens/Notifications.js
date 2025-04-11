@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, FlatList, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import styled from 'styled-components/native';
 import theme from '../styles/theme';
@@ -43,10 +43,17 @@ const EmptyMessage = styled(Text)`
   margin-top: ${theme.spacing.lg}px;
 `;
 
+const ErrorMessage = styled(Text)`
+  color: ${theme.colors.accent.red};
+  margin-bottom: ${theme.spacing.md}px;
+  text-align: center;
+`;
+
 const NotificationsScreen = () => {
   const userId = useAuthStore((state) => state.user?._id);
   const [notifications, setNotifications] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isClearing, setIsClearing] = useState(false); // Track clearing state to prevent Socket.IO interference
 
   useEffect(() => {
     fetchNotifications();
@@ -62,31 +69,44 @@ const NotificationsScreen = () => {
     });
 
     socket.on('new_notification', (notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      triggerHaptic('notification');
+      if (!isClearing) { // Only add new notifications if not clearing
+        setNotifications(prev => [notification, ...prev]);
+        triggerHaptic('notification');
+      }
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [userId]);
+  }, [userId, isClearing]);
 
   const fetchNotifications = async () => {
     try {
+      console.log('Fetching notifications from /notifications');
       const response = await api.get('/notifications');
+      console.log('Fetch notifications response:', response.data);
       if (response.data.success) {
         setNotifications(response.data.data);
         setErrorMessage(null);
+      } else {
+        setErrorMessage('Failed to fetch notifications: ' + (response.data.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
-      setErrorMessage('Failed to fetch notifications: ' + (error.message || 'Network error'));
+      console.error('Error fetching notifications:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+      });
+      setErrorMessage('Failed to fetch notifications: ' + (error.response?.data?.message || error.message || 'Network error'));
     }
   };
 
   const handleMarkAsRead = async (notificationId) => {
     try {
+      console.log(`Marking notification as read: ${notificationId}`);
       const response = await api.put(`/notifications/${notificationId}/read`);
+      console.log('Mark as read response:', response.data);
       if (response.data.success) {
         setNotifications(prev =>
           prev.map(notification =>
@@ -94,46 +114,71 @@ const NotificationsScreen = () => {
           )
         );
         triggerHaptic('success');
+      } else {
+        setErrorMessage('Failed to mark notification as read: ' + (response.data.message || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Error marking notification as read:', error);
-      setErrorMessage('Failed to mark notification as read: ' + (error.message || 'Network error'));
+      console.error('Error marking notification as read:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        headers: error.response?.headers,
+      });
+      setErrorMessage('Failed to mark notification as read: ' + (error.response?.data?.message || error.message || 'Network error'));
     }
   };
 
   const handleClearNotifications = async () => {
-    Alert.alert(
-      'Clear Notifications',
-      'Are you sure you want to clear all notifications?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const response = await api.delete('/notifications');
-              console.log('Clear notifications response:', response.data);
-              if (response.data.success) {
-                setNotifications([]);
-                setErrorMessage(null);
-                triggerHaptic('success');
-              } else {
-                setErrorMessage('Failed to clear notifications: ' + (response.data.message || 'Unknown error'));
-              }
-            } catch (error) {
-              console.error('Error clearing notifications:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status,
-                headers: error.response?.headers,
-              });
-              setErrorMessage('Failed to clear notifications: ' + (error.response?.data?.message || error.message || 'Network error'));
-            }
-          },
-        },
-      ]
-    );
+    console.log('Clear All Notifications button clicked');
+    const confirmClear = () => {
+      if (Platform.OS === 'web') {
+        return window.confirm('Are you sure you want to clear all notifications?');
+      } else {
+        return new Promise((resolve) => {
+          Alert.alert(
+            'Clear Notifications',
+            'Are you sure you want to clear all notifications?',
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Clear', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        });
+      }
+    };
+
+    const confirmed = await confirmClear();
+    if (confirmed) {
+      console.log('User confirmed clearing notifications');
+      setIsClearing(true); // Prevent Socket.IO from adding new notifications during clearing
+      try {
+        console.log('Making DELETE /notifications request...');
+        const response = await api.delete('/notifications');
+        console.log('DELETE /notifications response:', response.data);
+        if (response.data.success) {
+          console.log('Notifications cleared successfully, updating state...');
+          setNotifications([]);
+          setErrorMessage(null);
+          triggerHaptic('success');
+        } else {
+          console.warn('Backend response indicated failure:', response.data.message);
+          setErrorMessage('Failed to clear notifications: ' + (response.data.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error clearing notifications:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          headers: error.response?.headers,
+          config: error.config,
+        });
+        setErrorMessage('Failed to clear notifications: ' + (error.response?.data?.message || error.message || 'Network error'));
+      } finally {
+        setIsClearing(false); // Allow Socket.IO to add new notifications again
+      }
+    } else {
+      console.log('User cancelled clearing notifications');
+    }
   };
 
   const renderNotification = ({ item }) => (
@@ -173,9 +218,7 @@ const NotificationsScreen = () => {
         </ClearButton>
       )}
       {errorMessage && (
-        <Text style={{ color: theme.colors.accent.red, marginBottom: theme.spacing.md, textAlign: 'center' }}>
-          {errorMessage}
-        </Text>
+        <ErrorMessage>{errorMessage}</ErrorMessage>
       )}
       <FlatList
         data={notifications}

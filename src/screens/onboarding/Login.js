@@ -8,6 +8,7 @@ import Input from '../../components/common/Input';
 import api from '../../api/api';
 import useAuthStore from '../../store/authStore';
 import { setItemAsync } from '../../utils/secureStore';
+import { Ionicons } from '@expo/vector-icons'; // Already imported
 
 const Container = styled.View`
   flex: 1;
@@ -15,6 +16,18 @@ const Container = styled.View`
   justify-content: center;
   align-items: center;
   padding: ${theme.spacing.md}px;
+`;
+
+const LogoContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: ${theme.spacing.sm}px;
+`;
+
+const LogoText = styled(Text)`
+  font-size: 48px;
+  font-family: Poppins-Bold;
+  color: ${theme.colors.text.primary};
 `;
 
 const InputContainer = styled(Animated.View)`
@@ -76,7 +89,7 @@ const Login = ({ navigation }) => {
         useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -139,6 +152,10 @@ const Login = ({ navigation }) => {
 
   return (
     <Container>
+      <LogoContainer>
+        <LogoText>LIF</LogoText>
+        <Ionicons name="heart" size={48} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+      </LogoContainer>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         Welcome Back
       </Text>
