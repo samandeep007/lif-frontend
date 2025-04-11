@@ -17,11 +17,22 @@ const Container = styled.View`
 const Header = styled.View`
   width: 100%;
   padding: ${theme.spacing.md}px;
-  background-color: ${theme.colors.accent.pink}10; /* Light pink background */
+  background-color: ${theme.colors.accent.pink}10;
   align-items: center;
   justify-content: center;
   border-bottom-width: 1px;
   border-bottom-color: ${theme.colors.text.secondary}20;
+`;
+
+const LogoContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+const LogoText = styled(Text)`
+  font-size: 40px;
+  font-family: Poppins-Bold;
+  color: ${theme.colors.text.primary};
 `;
 
 const Content = styled.View`
@@ -31,7 +42,7 @@ const Content = styled.View`
 `;
 
 const ErrorWrapper = styled.View`
-  height: 40px; /* Reserve space for error message */
+  height: 40px;
   margin-bottom: ${theme.spacing.lg}px;
 `;
 
@@ -41,7 +52,7 @@ const ErrorText = styled(Text)`
 `;
 
 const NoUsersWrapper = styled.View`
-  height: 40px; /* Reserve space for "No more users" message */
+  height: 40px;
   margin-bottom: ${theme.spacing.lg}px;
 `;
 
@@ -104,7 +115,6 @@ const SwipeScreen = () => {
       return;
     }
 
-    // Map frontend directions to backend directions
     const backendDirection =
       direction === 'right'
         ? 'like'
@@ -137,9 +147,10 @@ const SwipeScreen = () => {
   return (
     <Container>
       <Header>
-        <Text variant="h1" style={{ color: theme.colors.text.primary }}>
-          LIF
-        </Text>
+        <LogoContainer>
+          <LogoText>LIF</LogoText>
+          <Ionicons name="heart" size={40} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+        </LogoContainer>
       </Header>
       <Content>
         {loading ? (
@@ -147,7 +158,7 @@ const SwipeScreen = () => {
         ) : currentIndex >= users.length ? (
           <>
             <NoUsersWrapper>
-              <Text variant="h1">No more users to swipe!</Text>
+              <Text variant="h2">No more users to swipe!</Text>
             </NoUsersWrapper>
             <ErrorWrapper />
           </>

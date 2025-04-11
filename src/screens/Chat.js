@@ -7,6 +7,7 @@ import theme from '../styles/theme';
 import Text from '../components/common/Text';
 import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
+import UserDetailsModal from '../components/UserDetailsModal'; // Import the modal
 import api from '../api/api';
 import useAuthStore from '../store/authStore';
 import { initSocket, disconnectSocket } from '../utils/socket';
@@ -37,6 +38,11 @@ const Header = styled.View`
   flex-direction: row;
   align-items: center;
   background-color: ${theme.colors.text.primary}10;
+`;
+
+const UserNameContainer = styled(TouchableOpacity)`
+  flex: 1;
+  margin-left: ${theme.spacing.md}px;
 `;
 
 const InputContainer = styled.View`
@@ -99,6 +105,7 @@ const ChatScreen = ({ navigation }) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [typing, setTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const socketRef = useRef(null);
@@ -122,17 +129,14 @@ const ChatScreen = ({ navigation }) => {
       socketRef.current = await initSocket();
       if (!socketRef.current) return;
 
-      // Join chat rooms for all matches
       const matchIds = chats.map(chat => chat.matchId);
       socketRef.current.emit('join_chats', matchIds);
 
-      // Listen for new messages
       socketRef.current.on('new_message', (message) => {
         if (message.matchId === selectedChat?.matchId) {
           setMessages(prev => [...prev, message]);
           flatListRef.current?.scrollToEnd({ animated: true });
         }
-        // Update chats list with the new last message
         setChats(prev =>
           prev.map(chat =>
             chat.matchId === message.matchId
@@ -142,7 +146,6 @@ const ChatScreen = ({ navigation }) => {
         );
       });
 
-      // Listen for deleted messages
       socketRef.current.on('message_deleted', ({ messageId }) => {
         console.log('Received message_deleted event:', messageId);
         if (selectedChat) {
@@ -150,14 +153,12 @@ const ChatScreen = ({ navigation }) => {
         }
       });
 
-      // Listen for typing indicators
       socketRef.current.on('typing', ({ userId: typingUserId, isTyping }) => {
         if (typingUserId !== userId && selectedChat?.otherUser.id === typingUserId) {
           setOtherUserTyping(isTyping);
         }
       });
 
-      // Listen for read receipts
       socketRef.current.on('message_read', ({ messageId }) => {
         setMessages(prev =>
           prev.map(msg =>
@@ -298,6 +299,10 @@ const ChatScreen = ({ navigation }) => {
     socket.emit('read_message', { messageId, matchId: selectedChat.matchId });
   };
 
+  const handleUserNameClick = () => {
+    setModalVisible(true);
+  };
+
   const renderMessage = ({ item, index }) => {
     const isSent = item.senderId === userId;
     const currentDate = new Date(item.createdAt).toLocaleDateString();
@@ -344,9 +349,11 @@ const ChatScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => setSelectedChat(null)}>
           <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
         </TouchableOpacity>
-        <Text variant="h2" style={{ marginLeft: theme.spacing.md, color: theme.colors.text.primary, fontSize: 20 }}>
-          {selectedChat.otherUser.name}
-        </Text>
+        <UserNameContainer onPress={handleUserNameClick}>
+          <Text variant="h2" style={{ marginLeft: theme.spacing.md, color: theme.colors.text.primary, fontSize: 20 }}>
+            {selectedChat.otherUser.name}
+          </Text>
+        </UserNameContainer>
       </Header>
       <ChatContainer>
         <FlatList
@@ -407,6 +414,11 @@ const ChatScreen = ({ navigation }) => {
           </InputContainer>
         </KeyboardAvoidingView>
       </ChatContainer>
+      <UserDetailsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        user={selectedChat?.otherUser}
+      />
     </Container>
   );
 };

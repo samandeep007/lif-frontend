@@ -6,6 +6,7 @@ import Text from '../../components/common/Text';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import api from '../../api/api';
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the heart icon
 
 const Container = styled.View`
   flex: 1;
@@ -15,15 +16,27 @@ const Container = styled.View`
   padding: ${theme.spacing.lg}px;
 `;
 
+const LogoContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: ${theme.spacing.sm}px;
+`;
+
+const LogoText = styled(Text)`
+  font-size: 48px;
+  font-family: Poppins-Bold;
+  color: ${theme.colors.text.primary};
+`;
+
 const InputContainer = styled(Animated.View)`
   margin-top: ${theme.spacing.sm}px;
-  align-self: center; /* Ensure centering */
+  align-self: center;
 `;
 
 const ErrorWrapper = styled.View`
-  height: 10x; /* Reserve space for general error message */
+  height: 10px; /* Fixed typo: 10x to 10px */
   margin-top: ${theme.spacing.sm}px;
-  margin-bottom: ${theme.spacing.md}px; /* Add spacing below error message */
+  margin-bottom: ${theme.spacing.md}px;
 `;
 
 const ErrorText = styled(Text)`
@@ -33,7 +46,7 @@ const ErrorText = styled(Text)`
 
 const ButtonContainer = styled(Animated.View)`
   margin-top: ${theme.spacing.lg}px;
-  align-self: center; /* Ensure centering */
+  align-self: center;
 `;
 
 const SignUp = ({ navigation, setFormData }) => {
@@ -73,7 +86,7 @@ const SignUp = ({ navigation, setFormData }) => {
         useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -124,6 +137,10 @@ const SignUp = ({ navigation, setFormData }) => {
 
   return (
     <Container>
+      <LogoContainer>
+        <LogoText>LIF</LogoText>
+        <Ionicons name="heart" size={48} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+      </LogoContainer>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         Create Your Account
       </Text>
