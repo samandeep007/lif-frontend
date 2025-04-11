@@ -8,6 +8,8 @@ import api from '../api/api';
 import useAuthStore from '../store/authStore';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; // Import navigation hook
+import { deleteItemAsync } from '../utils/secureStore'; // Import secure storage utility
 
 const Container = styled.ScrollView`
   flex: 1;
@@ -198,13 +200,26 @@ const SaveButton = styled(TouchableOpacity)`
   elevation: 3;
 `;
 
+const LogoutButton = styled(TouchableOpacity)`
+  background-color: ${theme.colors.accent.red};
+  padding: ${theme.spacing.md}px;
+  border-radius: 15px;
+  align-items: center;
+  margin-top: ${theme.spacing.lg}px;
+  margin-bottom: ${theme.spacing.lg}px;
+  shadow-color: #000;
+  shadow-opacity: 0.2;
+  shadow-radius: 5px;
+  elevation: 3;
+`;
+
 const ErrorMessage = styled(Text)`
   color: ${theme.colors.accent.red};
   margin-bottom: ${theme.spacing.md}px;
   text-align: center;
 `;
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = ({ navigation: propNavigation }) => {
   const { user, setUser } = useAuthStore();
   const [name, setName] = useState(user?.name || '');
   const [age, setAge] = useState(user?.age?.toString() || '');
@@ -218,6 +233,8 @@ const ProfileScreen = ({ navigation }) => {
   const [relationshipType, setRelationshipType] = useState(user?.filterPreferences?.relationshipType || 'any');
   const [errorMessage, setErrorMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const navigation = useNavigation(); // Use navigation hook
+  const { setToken, setIsAuthenticated } = useAuthStore(); // Access auth store setters
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -431,6 +448,31 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  const handleLogout = async () => {
+    console.log('Logout button clicked');
+    try {
+      // Clear the auth token from secure storage
+      await deleteItemAsync('authToken');
+      console.log('Auth token cleared from secure storage');
+
+      // Reset the authentication state
+      setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
+      console.log('Authentication state reset');
+
+      // Navigate to the OnboardingStack
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'OnboardingStack' }],
+      });
+      console.log('Navigated to OnboardingStack');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      setErrorMessage('Failed to logout: ' + (error.message || 'Unknown error'));
+    }
+  };
+
   return (
     <Container>
       <ProfileHeader>
@@ -641,6 +683,12 @@ const ProfileScreen = ({ navigation }) => {
             </Text>
           </SaveButton>
         )}
+
+        <LogoutButton onPress={handleLogout}>
+          <Text style={{ color: theme.colors.text.primary, fontSize: 16, fontFamily: 'Poppins-SemiBold' }}>
+            Logout
+          </Text>
+        </LogoutButton>
       </DetailsSection>
 
       {errorMessage && (

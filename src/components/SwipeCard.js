@@ -164,6 +164,12 @@ const SwipeCard = ({ user, onSwipe, index }) => {
     }
   };
 
+  const truncateBio = (bio, maxLength = 100) => {
+    if (!bio) return 'No bio available';
+    if (bio.length <= maxLength) return bio;
+    return bio.substring(0, maxLength) + '...';
+  };
+
   const cardStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -234,7 +240,7 @@ const SwipeCard = ({ user, onSwipe, index }) => {
             </GradientOverlay>
             <InfoContainer>
               <Text variant="h2">{`${user.name}, ${user.age}`}</Text>
-              <Text variant="body">{user.bio || 'No bio available'}</Text>
+              <Text variant="body">{truncateBio(user.bio)}</Text>
             </InfoContainer>
             {overlayColor && overlayIcon ? (
               <Overlay style={overlayStyle} color={overlayColor}>
