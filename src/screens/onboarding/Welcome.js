@@ -62,7 +62,6 @@ const Welcome = ({ navigation }) => {
         <Text
           variant="h1"
           style={{
-            fontSize: wp('4%'), // Responsive font size
             color: theme.colors.text.primary,
           }}
         >
@@ -78,7 +77,6 @@ const Welcome = ({ navigation }) => {
         <Text
           variant="body"
           style={{
-            fontSize: wp('2%'), // Responsive font size
             color: theme.colors.text.secondary,
           }}
         >
