@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import theme from '../styles/theme';
@@ -9,19 +9,24 @@ import ProfileScreen from '../screens/Profile';
 import ConfessionScreen from '../screens/Confession';
 import NotificationsScreen from '../screens/Notifications';
 import { triggerHaptic } from '../utils/haptics';
+import SafeAreaScreen from '../components/SafeAreaScreen'; // Import the wrapper
 
 const Stack = createStackNavigator();
 
 // Stack navigator for the Profile tab
 const ProfileStackNavigator = ({ navigation }) => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        cardStyle: { flex: 1 }, // Ensure full-screen rendering
+      }}
+    >
       <Stack.Screen
         name="ProfileMain"
+        component={ProfileScreen}
         options={{ headerShown: false }}
-      >
-        {(props) => <ProfileScreen {...props} navigation={navigation} />}
-      </Stack.Screen>
+      />
     </Stack.Navigator>
   );
 };
@@ -52,7 +57,7 @@ const MainTabs = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
+    <SafeAreaScreen>
       <View style={styles.container}>
         {renderScreen()}
         <View style={styles.tabBar}>
@@ -132,15 +137,11 @@ const MainTabs = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </SafeAreaScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   container: {
     flex: 1,
   },
@@ -150,10 +151,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.background,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.text.secondary + '33', // Subtle border
+    borderTopColor: theme.colors.text.secondary + '33',
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: Platform.OS === 'web' ? 10 : 0, // Extra padding for web
   },
   tabItem: {
     flex: 1,
