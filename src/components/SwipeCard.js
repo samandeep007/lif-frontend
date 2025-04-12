@@ -201,7 +201,7 @@ const SwipeCard = ({ user, onSwipe, index }) => {
       ],
       zIndex: -index,
       width: SCREEN_WIDTH - 40,
-      height: SCREEN_HEIGHT * 0.67,
+      height: SCREEN_HEIGHT * 0.64,
       borderRadius: theme.borderRadius.large,
       position: 'absolute',
       backgroundColor: theme.colors.text.primary,
