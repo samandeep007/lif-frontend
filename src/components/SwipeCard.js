@@ -39,7 +39,7 @@ const GradientOverlay = styled(Animated.View)`
 
 const InfoContainer = styled.View`
   position: absolute;
-  bottom: 20px;
+  bottom: 30px;
   left: 20px;
 `;
 
@@ -201,7 +201,7 @@ const SwipeCard = ({ user, onSwipe, index }) => {
       ],
       zIndex: -index,
       width: SCREEN_WIDTH - 40,
-      height: SCREEN_HEIGHT * 0.64,
+      height: SCREEN_HEIGHT * 0.7,
       borderRadius: theme.borderRadius.large,
       position: 'absolute',
       backgroundColor: theme.colors.text.primary,
