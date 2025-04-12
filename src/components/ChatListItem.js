@@ -68,8 +68,8 @@ const ChatListItem = ({ chat, onPress, onDelete }) => {
     ? lastMessage.isImage
       ? 'Photo'
       : lastMessage.content.length > 40
-      ? lastMessage.content.substring(0, 40) + '...'
-      : lastMessage.content
+        ? lastMessage.content.substring(0, 40) + '...'
+        : lastMessage.content
     : null;
 
   // Render the right swipe action (bin icon)
@@ -112,25 +112,31 @@ const ChatListItem = ({ chat, onPress, onDelete }) => {
       <Container onPress={handlePress}>
         <Avatar
           source={{ uri: otherUser.photo || 'https://via.placeholder.com/60' }}
-          onError={(e) => console.log('Error loading avatar:', e.nativeEvent.error)}
+          onError={e =>
+            console.log('Error loading avatar:', e.nativeEvent.error)
+          }
         />
         <InfoContainer>
           <NameContainer>
-            <Text variant="h2" style={{ fontSize: 18, color: theme.colors.text.primary }}>
+            <Text
+              variant="h2"
+              style={{ fontSize: 18, color: theme.colors.text.primary }}
+            >
               {otherUser.name}
             </Text>
             {unreadCount > 0 && (
               <UnreadBadge>
-                <Text variant="body" style={{ color: theme.colors.text.primary, fontSize: 12 }}>
+                <Text
+                  variant="body"
+                  style={{ color: theme.colors.text.primary, fontSize: 12 }}
+                >
                   {unreadCount}
                 </Text>
               </UnreadBadge>
             )}
           </NameContainer>
           {lastMessage && (
-            <LastMessage numberOfLines={1}>
-              {lastMessageText}
-            </LastMessage>
+            <LastMessage numberOfLines={1}>{lastMessageText}</LastMessage>
           )}
         </InfoContainer>
       </Container>

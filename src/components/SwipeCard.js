@@ -8,7 +8,11 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { PanGestureHandler, TapGestureHandler, State } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  TapGestureHandler,
+  State,
+} from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import theme from '../styles/theme';
@@ -76,16 +80,19 @@ const SwipeCard = ({ user, onSwipe, index }) => {
   const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
 
   // Use user.photos[0]?.url if available, otherwise use user.selfie, with a fallback
-  const imageUrl = user.photos && user.photos.length > 0 && user.photos[0]?.url
-    ? user.photos[0].url
-    : user.selfie || 'https://via.placeholder.com/300';
+  const imageUrl =
+    user.photos && user.photos.length > 0 && user.photos[0]?.url
+      ? user.photos[0].url
+      : user.selfie || 'https://via.placeholder.com/300';
   console.log(`SwipeCard image URL for user ${user._id}:`, imageUrl);
 
-  const onHandlerStateChange = (event) => {
+  const onHandlerStateChange = event => {
     const { translationX, translationY, state } = event.nativeEvent;
 
     if (state === State.ACTIVE) {
-      console.log(`Gesture active for user ${user._id}: translationX=${translationX}, translationY=${translationY}`);
+      console.log(
+        `Gesture active for user ${user._id}: translationX=${translationX}, translationY=${translationY}`
+      );
       translateX.value = translationX;
       translateY.value = translationY;
       rotate.value = (translationX / (SCREEN_WIDTH / 2)) * 10; // Rotate up to 10 degrees during drag
@@ -109,27 +116,42 @@ const SwipeCard = ({ user, onSwipe, index }) => {
 
       overlayOpacity.value = opacity > 1 ? 1 : opacity;
     } else if (state === State.END) {
-      console.log(`Gesture ended for user ${user._id}: translationX=${translationX}, translationY=${translationY}`);
+      console.log(
+        `Gesture ended for user ${user._id}: translationX=${translationX}, translationY=${translationY}`
+      );
       if (translationX > SWIPE_THRESHOLD) {
         console.log(`Swiping right on user ${user._id}`);
         onSwipe('right', user);
         triggerHaptic('medium');
         // Animate translateX, translateY, and rotate for a "like" swipe with a curved trajectory
-        translateX.value = withTiming(SCREEN_WIDTH, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) });
-        translateY.value = withTiming(-SCREEN_HEIGHT * 0.2, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) }); // Slight upward arc
-        rotate.value = withTiming((translationX / (SCREEN_WIDTH / 2)) * 30, { duration: SWIPE_OUT_DURATION }); // Dynamic rotation up to 60 degrees
+        translateX.value = withTiming(SCREEN_WIDTH, {
+          duration: SWIPE_OUT_DURATION,
+          easing: Easing.out(Easing.quad),
+        });
+        translateY.value = withTiming(-SCREEN_HEIGHT * 0.2, {
+          duration: SWIPE_OUT_DURATION,
+          easing: Easing.out(Easing.quad),
+        }); // Slight upward arc
+        rotate.value = withTiming((translationX / (SCREEN_WIDTH / 2)) * 30, {
+          duration: SWIPE_OUT_DURATION,
+        }); // Dynamic rotation up to 60 degrees
       } else if (translationX < -SWIPE_THRESHOLD) {
         console.log(`Swiping left on user ${user._id}`);
         onSwipe('left', user);
         triggerHaptic('medium');
         // Animate translateX, translateY, and rotate for a "pass" swipe with a curved trajectory
-        translateX.value = withTiming(-SCREEN_WIDTH, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) });
-        translateY.value = withTiming(-SCREEN_HEIGHT * 0.2, { duration: SWIPE_OUT_DURATION, easing: Easing.out(Easing.quad) }); // Slight upward arc
-        rotate.value = withTiming((translationX / (SCREEN_WIDTH / 2)) * 30, { duration: SWIPE_OUT_DURATION }); // Dynamic rotation up to -60 degrees
-      } else if (
-        Math.abs(translationX) > 40 &&
-        Math.abs(translationY) > 40
-      ) {
+        translateX.value = withTiming(-SCREEN_WIDTH, {
+          duration: SWIPE_OUT_DURATION,
+          easing: Easing.out(Easing.quad),
+        });
+        translateY.value = withTiming(-SCREEN_HEIGHT * 0.2, {
+          duration: SWIPE_OUT_DURATION,
+          easing: Easing.out(Easing.quad),
+        }); // Slight upward arc
+        rotate.value = withTiming((translationX / (SCREEN_WIDTH / 2)) * 30, {
+          duration: SWIPE_OUT_DURATION,
+        }); // Dynamic rotation up to -60 degrees
+      } else if (Math.abs(translationX) > 40 && Math.abs(translationY) > 40) {
         console.log(`Swiping up (super like) on user ${user._id}`);
         starBurstOpacity.value = withTiming(1, { duration: 300 });
         starBurstScale.value = withSpring(
@@ -179,7 +201,7 @@ const SwipeCard = ({ user, onSwipe, index }) => {
       ],
       zIndex: -index,
       width: SCREEN_WIDTH - 40,
-      height: SCREEN_HEIGHT * 0.70,
+      height: SCREEN_HEIGHT * 0.67,
       borderRadius: theme.borderRadius.large,
       position: 'absolute',
       backgroundColor: theme.colors.text.primary,
@@ -223,8 +245,11 @@ const SwipeCard = ({ user, onSwipe, index }) => {
                 console.log(`Image loaded for user ${user._id}`);
                 setImageLoaded(true);
               }}
-              onError={(e) => {
-                console.error(`Image failed to load for user ${user._id}:`, e.nativeEvent.error);
+              onError={e => {
+                console.error(
+                  `Image failed to load for user ${user._id}:`,
+                  e.nativeEvent.error
+                );
                 setImageLoaded(true); // Treat as loaded to hide the ActivityIndicator
               }}
             />

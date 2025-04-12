@@ -21,7 +21,7 @@ const initSocket = async () => {
     console.log('Socket.IO connected');
   });
 
-  socket.on('connect_error', (error) => {
+  socket.on('connect_error', error => {
     console.error('Socket.IO connection error:', error);
   });
 

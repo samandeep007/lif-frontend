@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
+import {
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  Platform,
+} from 'react-native';
 import styled from 'styled-components/native';
 import Slider from '@react-native-community/slider';
 import theme from '../styles/theme';
@@ -179,14 +187,22 @@ const OptionButton = styled(TouchableOpacity)`
   border-radius: 20px;
   margin-right: ${theme.spacing.sm}px;
   margin-bottom: ${theme.spacing.sm}px;
-  background-color: ${props => (props.selected ? theme.colors.accent.pink : theme.colors.text.secondary + '20')};
-  border: 1px solid ${props => (props.selected ? theme.colors.accent.pink : theme.colors.text.secondary + '40')};
+  background-color: ${props =>
+    props.selected
+      ? theme.colors.accent.pink
+      : theme.colors.text.secondary + '20'};
+  border: 1px solid
+    ${props =>
+      props.selected
+        ? theme.colors.accent.pink
+        : theme.colors.text.secondary + '40'};
 `;
 
 const OptionText = styled(Text)`
   font-family: Poppins-Regular;
   font-size: 14px;
-  color: ${props => (props.selected ? theme.colors.text.primary : theme.colors.text.secondary)};
+  color: ${props =>
+    props.selected ? theme.colors.text.primary : theme.colors.text.secondary};
 `;
 
 const SaveButton = styled(TouchableOpacity)`
@@ -227,11 +243,21 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
   const [bio, setBio] = useState(user?.bio || '');
   const [profilePic, setProfilePic] = useState(user?.selfie || '');
   const [photos, setPhotos] = useState(user?.photos || []);
-  const [ageRangeMin, setAgeRangeMin] = useState(user?.filterPreferences?.ageRange?.min || 18);
-  const [ageRangeMax, setAgeRangeMax] = useState(user?.filterPreferences?.ageRange?.max || 100);
-  const [maxDistance, setMaxDistance] = useState(user?.filterPreferences?.maxDistance?.toString() || '100');
-  const [seekingGender, setSeekingGender] = useState(user?.filterPreferences?.seekingGender || 'any');
-  const [relationshipType, setRelationshipType] = useState(user?.filterPreferences?.relationshipType || 'any');
+  const [ageRangeMin, setAgeRangeMin] = useState(
+    user?.filterPreferences?.ageRange?.min || 18
+  );
+  const [ageRangeMax, setAgeRangeMax] = useState(
+    user?.filterPreferences?.ageRange?.max || 100
+  );
+  const [maxDistance, setMaxDistance] = useState(
+    user?.filterPreferences?.maxDistance?.toString() || '100'
+  );
+  const [seekingGender, setSeekingGender] = useState(
+    user?.filterPreferences?.seekingGender || 'any'
+  );
+  const [relationshipType, setRelationshipType] = useState(
+    user?.filterPreferences?.relationshipType || 'any'
+  );
   const [errorMessage, setErrorMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [imageModalVisible, setImageModalVisible] = useState(false); // State for ImageModal visibility
@@ -252,17 +278,30 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
           setBio(response.data.data.bio);
           setProfilePic(response.data.data.selfie || '');
           setPhotos(response.data.data.photos || []);
-          setAgeRangeMin(response.data.data.filterPreferences?.ageRange?.min || 18);
-          setAgeRangeMax(response.data.data.filterPreferences?.ageRange?.max || 100);
-          setMaxDistance(response.data.data.filterPreferences?.maxDistance?.toString() || '100');
-          setSeekingGender(response.data.data.filterPreferences?.seekingGender || 'any');
-          setRelationshipType(response.data.data.filterPreferences?.relationshipType || 'any');
+          setAgeRangeMin(
+            response.data.data.filterPreferences?.ageRange?.min || 18
+          );
+          setAgeRangeMax(
+            response.data.data.filterPreferences?.ageRange?.max || 100
+          );
+          setMaxDistance(
+            response.data.data.filterPreferences?.maxDistance?.toString() ||
+              '100'
+          );
+          setSeekingGender(
+            response.data.data.filterPreferences?.seekingGender || 'any'
+          );
+          setRelationshipType(
+            response.data.data.filterPreferences?.relationshipType || 'any'
+          );
           console.log('User profile set successfully:', response.data.data);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
         console.error('Error response:', error.response?.data);
-        setErrorMessage('Failed to fetch profile: ' + (error.message || 'Network error'));
+        setErrorMessage(
+          'Failed to fetch profile: ' + (error.message || 'Network error')
+        );
       }
     };
     fetchProfile();
@@ -310,7 +349,9 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
       } catch (error) {
         console.error('Error updating profile:', error);
         console.error('Error response:', error.response?.data);
-        setErrorMessage('Failed to update profile: ' + (error.message || 'Network error'));
+        setErrorMessage(
+          'Failed to update profile: ' + (error.message || 'Network error')
+        );
       }
     } else {
       setIsEditing(true);
@@ -319,7 +360,8 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
 
   const handleUploadProfilePic = async () => {
     console.log('Starting profile picture upload process');
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       console.log('Media library permission denied');
       alert('Permission to access media library is required!');
@@ -368,7 +410,10 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
       } catch (error) {
         console.error('Error uploading profile picture:', error);
         console.error('Error response:', error.response?.data);
-        setErrorMessage('Failed to upload profile picture: ' + (error.message || 'Network error'));
+        setErrorMessage(
+          'Failed to upload profile picture: ' +
+            (error.message || 'Network error')
+        );
       }
     } else {
       console.log('Image picker canceled');
@@ -377,7 +422,8 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
 
   const handleAddPhoto = async () => {
     console.log('Starting additional photo upload process');
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       console.log('Media library permission denied');
       alert('Permission to access media library is required!');
@@ -417,41 +463,59 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
         });
         console.log('Additional photo upload response:', response.data);
         if (response.data.success) {
-          setPhotos(prev => [...prev, { url: response.data.data.url, _id: response.data.data._id }]);
-          setUser(prev => ({ ...prev, photos: [...prev.photos, { url: response.data.data.url, _id: response.data.data._id }] }));
+          setPhotos(prev => [
+            ...prev,
+            { url: response.data.data.url, _id: response.data.data._id },
+          ]);
+          setUser(prev => ({
+            ...prev,
+            photos: [
+              ...prev.photos,
+              { url: response.data.data.url, _id: response.data.data._id },
+            ],
+          }));
           setErrorMessage(null);
           Alert.alert('Success', 'Photo added successfully!');
         }
       } catch (error) {
         console.error('Error adding photo:', error);
         console.error('Error response:', error.response?.data);
-        setErrorMessage('Failed to add photo: ' + (error.message || 'Network error'));
+        setErrorMessage(
+          'Failed to add photo: ' + (error.message || 'Network error')
+        );
       }
     } else {
       console.log('Image picker canceled');
     }
   };
 
-  const handleDeletePhoto = async (photoId) => {
+  const handleDeletePhoto = async photoId => {
     console.log(`Starting photo deletion process for photoId: ${photoId}`);
     try {
-      console.log(`Deleting photo with ID: ${photoId} via /api/users/photos/${photoId}`);
+      console.log(
+        `Deleting photo with ID: ${photoId} via /api/users/photos/${photoId}`
+      );
       const response = await api.delete(`/users/photos/${photoId}`);
       console.log('Delete photo response:', response.data);
       if (response.data.success) {
         setPhotos(prev => prev.filter(photo => photo._id !== photoId));
-        setUser(prev => ({ ...prev, photos: prev.photos.filter(photo => photo._id !== photoId) }));
+        setUser(prev => ({
+          ...prev,
+          photos: prev.photos.filter(photo => photo._id !== photoId),
+        }));
         setErrorMessage(null);
         Alert.alert('Success', 'Photo deleted successfully!');
       }
     } catch (error) {
       console.error('Error deleting photo:', error);
       console.error('Error response:', error.response?.data);
-      setErrorMessage('Failed to delete photo: ' + (error.message || 'Network error'));
+      setErrorMessage(
+        'Failed to delete photo: ' + (error.message || 'Network error')
+      );
     }
   };
 
-  const handlePhotoClick = (url) => {
+  const handlePhotoClick = url => {
     console.log('Photo clicked, opening ImageModal with URL:', url);
     setSelectedImageUrl(url);
     setImageModalVisible(true);
@@ -478,7 +542,9 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
       console.log('Navigated to OnboardingStack');
     } catch (error) {
       console.error('Error during logout:', error);
-      setErrorMessage('Failed to logout: ' + (error.message || 'Unknown error'));
+      setErrorMessage(
+        'Failed to logout: ' + (error.message || 'Unknown error')
+      );
     }
   };
 
@@ -489,7 +555,9 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
           <Ionicons
             name={isEditing ? 'checkmark-circle' : 'pencil'}
             size={28}
-            color={isEditing ? theme.colors.accent.pink : theme.colors.text.primary}
+            color={
+              isEditing ? theme.colors.accent.pink : theme.colors.text.primary
+            }
           />
         </EditButton>
         <ProfilePhotoWrapper>
@@ -498,28 +566,47 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
               <ProfilePhoto source={{ uri: profilePic }} />
             </TouchableOpacity>
           ) : (
-            <View style={{
-              width: 180,
-              height: 180,
-              borderRadius: 90,
-              backgroundColor: theme.colors.text.secondary + '20',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-              <Ionicons name="person" size={90} color={theme.colors.text.secondary} />
+            <View
+              style={{
+                width: 180,
+                height: 180,
+                borderRadius: 90,
+                backgroundColor: theme.colors.text.secondary + '20',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Ionicons
+                name="person"
+                size={90}
+                color={theme.colors.text.secondary}
+              />
             </View>
           )}
           {isEditing && (
             <EditIcon onPress={handleUploadProfilePic}>
-              <Ionicons name="pencil" size={20} color={theme.colors.text.primary} />
+              <Ionicons
+                name="pencil"
+                size={20}
+                color={theme.colors.text.primary}
+              />
             </EditIcon>
           )}
         </ProfilePhotoWrapper>
         <NameAge>
-          <Text variant="h2" style={{ color: theme.colors.text.primary, marginRight: theme.spacing.sm }}>
+          <Text
+            variant="h2"
+            style={{
+              color: theme.colors.text.primary,
+              marginRight: theme.spacing.sm,
+            }}
+          >
             {name}, {age}
           </Text>
-          <Text variant="body" style={{ color: theme.colors.text.secondary, fontSize: 16 }}>
+          <Text
+            variant="body"
+            style={{ color: theme.colors.text.secondary, fontSize: 16 }}
+          >
             {user?.gender}
           </Text>
         </NameAge>
@@ -533,15 +620,29 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
             </TouchableOpacity>
             {isEditing && (
               <DeletePhotoButton onPress={() => handleDeletePhoto(photo._id)}>
-                <Ionicons name="close-circle" size={20} color={theme.colors.text.primary} />
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={theme.colors.text.primary}
+                />
               </DeletePhotoButton>
             )}
           </PhotoWrapper>
         ))}
         {isEditing && photos.length < 9 && (
           <AddPhotoButton onPress={handleAddPhoto}>
-            <Ionicons name="add" size={40} color={theme.colors.text.secondary} />
-            <Text style={{ color: theme.colors.text.secondary, marginTop: theme.spacing.sm, fontSize: 14 }}>
+            <Ionicons
+              name="add"
+              size={40}
+              color={theme.colors.text.secondary}
+            />
+            <Text
+              style={{
+                color: theme.colors.text.secondary,
+                marginTop: theme.spacing.sm,
+                fontSize: 14,
+              }}
+            >
               Add Photo
             </Text>
           </AddPhotoButton>
@@ -590,7 +691,13 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
           <>
             <SliderContainer>
               <SliderLabel>Age Range</SliderLabel>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: theme.spacing.xs }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  marginBottom: theme.spacing.xs,
+                }}
+              >
                 <SliderValue>{ageRangeMin}</SliderValue>
                 <SliderValue>{ageRangeMax}</SliderValue>
               </View>
@@ -671,7 +778,11 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
             <FieldContainer>
               <Label>Seeking</Label>
               <Text variant="body" style={{ color: theme.colors.text.primary }}>
-                {user?.filterPreferences?.seekingGender === 'any' ? 'Any' : user?.filterPreferences?.seekingGender}, {user?.filterPreferences?.ageRange?.min}-{user?.filterPreferences?.ageRange?.max}
+                {user?.filterPreferences?.seekingGender === 'any'
+                  ? 'Any'
+                  : user?.filterPreferences?.seekingGender}
+                , {user?.filterPreferences?.ageRange?.min}-
+                {user?.filterPreferences?.ageRange?.max}
               </Text>
             </FieldContainer>
             <FieldContainer>
@@ -683,7 +794,9 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
             <FieldContainer>
               <Label>Relationship Type</Label>
               <Text variant="body" style={{ color: theme.colors.text.primary }}>
-                {user?.filterPreferences?.relationshipType === 'any' ? 'Any' : user?.filterPreferences?.relationshipType}
+                {user?.filterPreferences?.relationshipType === 'any'
+                  ? 'Any'
+                  : user?.filterPreferences?.relationshipType}
               </Text>
             </FieldContainer>
           </>
@@ -691,22 +804,32 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
 
         {isEditing && (
           <SaveButton onPress={handleEditProfile}>
-            <Text style={{ color: theme.colors.text.primary, fontSize: 16, fontFamily: 'Poppins-SemiBold' }}>
+            <Text
+              style={{
+                color: theme.colors.text.primary,
+                fontSize: 16,
+                fontFamily: 'Poppins-SemiBold',
+              }}
+            >
               Save Profile
             </Text>
           </SaveButton>
         )}
 
         <LogoutButton onPress={handleLogout}>
-          <Text style={{ color: theme.colors.text.primary, fontSize: 16, fontFamily: 'Poppins-SemiBold' }}>
+          <Text
+            style={{
+              color: theme.colors.text.primary,
+              fontSize: 16,
+              fontFamily: 'Poppins-SemiBold',
+            }}
+          >
             Logout
           </Text>
         </LogoutButton>
       </DetailsSection>
 
-      {errorMessage && (
-        <ErrorMessage>{errorMessage}</ErrorMessage>
-      )}
+      {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
 
       <ImageModal
         visible={imageModalVisible}

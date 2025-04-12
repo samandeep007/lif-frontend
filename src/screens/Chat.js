@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import {
+  View,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+} from 'react-native';
 import styled from 'styled-components/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -97,7 +105,7 @@ const ErrorMessage = styled(Text)`
 `;
 
 const ChatScreen = ({ navigation }) => {
-  const userId = useAuthStore((state) => state.user?._id);
+  const userId = useAuthStore(state => state.user?._id);
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -137,7 +145,7 @@ const ChatScreen = ({ navigation }) => {
       const matchIds = chats.map(chat => chat.matchId);
       socketRef.current.emit('join_chats', matchIds);
 
-      socketRef.current.on('new_message', (message) => {
+      socketRef.current.on('new_message', message => {
         if (message.matchId === selectedChat?.matchId) {
           setMessages(prev => [...prev, message]);
           flatListRef.current?.scrollToEnd({ animated: true });
@@ -145,7 +153,14 @@ const ChatScreen = ({ navigation }) => {
         setChats(prev =>
           prev.map(chat =>
             chat.matchId === message.matchId
-              ? { ...chat, lastMessage: { content: message.content, createdAt: message.createdAt, isImage: message.isImage } }
+              ? {
+                  ...chat,
+                  lastMessage: {
+                    content: message.content,
+                    createdAt: message.createdAt,
+                    isImage: message.isImage,
+                  },
+                }
               : chat
           )
         );
@@ -159,7 +174,10 @@ const ChatScreen = ({ navigation }) => {
       });
 
       socketRef.current.on('typing', ({ userId: typingUserId, isTyping }) => {
-        if (typingUserId !== userId && selectedChat?.otherUser.id === typingUserId) {
+        if (
+          typingUserId !== userId &&
+          selectedChat?.otherUser.id === typingUserId
+        ) {
           setOtherUserTyping(isTyping);
         }
       });
@@ -179,7 +197,7 @@ const ChatScreen = ({ navigation }) => {
     };
   }, [chats, selectedChat, userId]);
 
-  const handleSelectChat = async (chat) => {
+  const handleSelectChat = async chat => {
     console.log('handleSelectChat called for chat with matchId:', chat.matchId);
     setSelectedChat(chat);
     setSelectedImage(null);
@@ -195,8 +213,13 @@ const ChatScreen = ({ navigation }) => {
           otherUser: fullOtherUser,
         });
       } else {
-        console.error('Failed to fetch other user details:', userResponse.data.message);
-        setErrorMessage('Failed to load user details: ' + userResponse.data.message);
+        console.error(
+          'Failed to fetch other user details:',
+          userResponse.data.message
+        );
+        setErrorMessage(
+          'Failed to load user details: ' + userResponse.data.message
+        );
       }
 
       // Fetch the chat messages
@@ -209,12 +232,17 @@ const ChatScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error fetching messages or user details:', error);
-      setErrorMessage('Failed to load messages or user details: ' + (error.message || 'Network error'));
+      setErrorMessage(
+        'Failed to load messages or user details: ' +
+          (error.message || 'Network error')
+      );
     }
   };
 
   const handleDeleteChat = (matchId, otherUserName) => {
-    console.log(`handleDeleteChat called for matchId: ${matchId}, user: ${otherUserName}`);
+    console.log(
+      `handleDeleteChat called for matchId: ${matchId}, user: ${otherUserName}`
+    );
     setChatToDelete({ matchId, otherUserName });
     setDeleteModalVisible(true);
   };
@@ -248,7 +276,9 @@ const ChatScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error deleting chat:', error);
-      setErrorMessage('Failed to delete chat: ' + (error.message || 'Network error'));
+      setErrorMessage(
+        'Failed to delete chat: ' + (error.message || 'Network error')
+      );
     } finally {
       setDeleteModalVisible(false);
       setChatToDelete(null);
@@ -290,7 +320,9 @@ const ChatScreen = ({ navigation }) => {
         }
       } catch (error) {
         console.error('Error sending image message:', error);
-        setErrorMessage('Failed to send image: ' + (error.message || 'Network error'));
+        setErrorMessage(
+          'Failed to send image: ' + (error.message || 'Network error')
+        );
       }
     } else if (newMessage.trim()) {
       try {
@@ -303,12 +335,14 @@ const ChatScreen = ({ navigation }) => {
         }
       } catch (error) {
         console.error('Error sending message:', error);
-        setErrorMessage('Failed to send message: ' + (error.message || 'Network error'));
+        setErrorMessage(
+          'Failed to send message: ' + (error.message || 'Network error')
+        );
       }
     }
   };
 
-  const handleDeleteMessage = async (messageId) => {
+  const handleDeleteMessage = async messageId => {
     try {
       const response = await api.delete(`/chats/message/${messageId}`);
       console.log('Delete message response:', response.data);
@@ -317,12 +351,15 @@ const ChatScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error deleting message:', error);
-      setErrorMessage('Failed to delete message: ' + (error.message || 'Network error'));
+      setErrorMessage(
+        'Failed to delete message: ' + (error.message || 'Network error')
+      );
     }
   };
 
   const handleSelectImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       alert('Permission to access media library is required!');
       return;
@@ -366,13 +403,16 @@ const ChatScreen = ({ navigation }) => {
     }, 2000);
   };
 
-  const handleReadMessage = (messageId) => {
+  const handleReadMessage = messageId => {
     const socket = io('https://lif-backend-awv3.onrender.com');
     socket.emit('read_message', { messageId, matchId: selectedChat.matchId });
   };
 
   const handleUserNameClick = () => {
-    console.log('User name clicked, opening modal with user:', selectedChat?.otherUser);
+    console.log(
+      'User name clicked, opening modal with user:',
+      selectedChat?.otherUser
+    );
     setModalVisible(true);
   };
 
@@ -380,7 +420,9 @@ const ChatScreen = ({ navigation }) => {
     const isSent = item.senderId === userId;
     const currentDate = new Date(item.createdAt).toLocaleDateString();
     const previousMessage = index > 0 ? messages[index - 1] : null;
-    const previousDate = previousMessage ? new Date(previousMessage.createdAt).toLocaleDateString() : null;
+    const previousDate = previousMessage
+      ? new Date(previousMessage.createdAt).toLocaleDateString()
+      : null;
     const showDateSeparator = previousDate !== currentDate;
 
     return (
@@ -405,15 +447,24 @@ const ChatScreen = ({ navigation }) => {
         <ChatListContainer>
           <FlatList
             data={chats}
-            keyExtractor={(item) => item.matchId}
+            keyExtractor={item => item.matchId}
             renderItem={({ item }) => (
               <ChatListItem
                 chat={item}
                 onPress={() => handleSelectChat(item)}
-                onDelete={() => handleDeleteChat(item.matchId, item.otherUser.name)}
+                onDelete={() =>
+                  handleDeleteChat(item.matchId, item.otherUser.name)
+                }
               />
             )}
-            ListEmptyComponent={<Text variant="body" style={{ textAlign: 'center', padding: theme.spacing.md }}>No chats yet!</Text>}
+            ListEmptyComponent={
+              <Text
+                variant="body"
+                style={{ textAlign: 'center', padding: theme.spacing.md }}
+              >
+                No chats yet!
+              </Text>
+            }
           />
         </ChatListContainer>
         <DeleteConfirmationModal
@@ -430,10 +481,21 @@ const ChatScreen = ({ navigation }) => {
     <Container>
       <Header>
         <TouchableOpacity onPress={() => setSelectedChat(null)}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.text.primary}
+          />
         </TouchableOpacity>
         <UserNameContainer onPress={handleUserNameClick}>
-          <Text variant="h2" style={{ marginLeft: theme.spacing.md, color: theme.colors.text.primary, fontSize: 20 }}>
+          <Text
+            variant="h2"
+            style={{
+              marginLeft: theme.spacing.md,
+              color: theme.colors.text.primary,
+              fontSize: 20,
+            }}
+          >
             {selectedChat.otherUser.name}
           </Text>
         </UserNameContainer>
@@ -442,21 +504,38 @@ const ChatScreen = ({ navigation }) => {
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item) => item._id}
+          keyExtractor={item => item._id}
           renderItem={renderMessage}
-          ListEmptyComponent={<Text variant="body" style={{ textAlign: 'center', padding: theme.spacing.md, color: theme.colors.text.secondary }}>No messages yet!</Text>}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          ListEmptyComponent={
+            <Text
+              variant="body"
+              style={{
+                textAlign: 'center',
+                padding: theme.spacing.md,
+                color: theme.colors.text.secondary,
+              }}
+            >
+              No messages yet!
+            </Text>
+          }
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: true })
+          }
         />
         {otherUserTyping && (
           <TypingIndicator>
-            <Text variant="body" style={{ color: theme.colors.text.secondary, fontStyle: 'italic' }}>
+            <Text
+              variant="body"
+              style={{
+                color: theme.colors.text.secondary,
+                fontStyle: 'italic',
+              }}
+            >
               {selectedChat.otherUser.name} is typing...
             </Text>
           </TypingIndicator>
         )}
-        {errorMessage && (
-          <ErrorMessage>{errorMessage}</ErrorMessage>
-        )}
+        {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
@@ -466,17 +545,28 @@ const ChatScreen = ({ navigation }) => {
               <ImagePreviewContainer>
                 <ImagePreview source={{ uri: selectedImage }} />
                 <TouchableOpacity onPress={handleCancelImage}>
-                  <Ionicons name="close-circle" size={24} color={theme.colors.accent.red} />
+                  <Ionicons
+                    name="close-circle"
+                    size={24}
+                    color={theme.colors.accent.red}
+                  />
                 </TouchableOpacity>
               </ImagePreviewContainer>
             ) : (
               <MessageInputContainer>
-                <TouchableOpacity onPress={handleSelectImage} style={{ marginRight: theme.spacing.sm }}>
-                  <Ionicons name="image" size={24} color={theme.colors.accent.pink} />
+                <TouchableOpacity
+                  onPress={handleSelectImage}
+                  style={{ marginRight: theme.spacing.sm }}
+                >
+                  <Ionicons
+                    name="image"
+                    size={24}
+                    color={theme.colors.accent.pink}
+                  />
                 </TouchableOpacity>
                 <MessageInput
                   value={newMessage}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     setNewMessage(text);
                     handleTyping();
                   }}
@@ -485,13 +575,21 @@ const ChatScreen = ({ navigation }) => {
                   multiline
                 />
                 <TouchableOpacity onPress={handleSendMessage}>
-                  <Ionicons name="send" size={24} color={theme.colors.accent.pink} />
+                  <Ionicons
+                    name="send"
+                    size={24}
+                    color={theme.colors.accent.pink}
+                  />
                 </TouchableOpacity>
               </MessageInputContainer>
             )}
             {selectedImage && (
               <TouchableOpacity onPress={handleSendMessage}>
-                <Ionicons name="send" size={24} color={theme.colors.accent.pink} />
+                <Ionicons
+                  name="send"
+                  size={24}
+                  color={theme.colors.accent.pink}
+                />
               </TouchableOpacity>
             )}
           </InputContainer>

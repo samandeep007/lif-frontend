@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Animated, Easing, Image, TouchableOpacity, TextInput, Platform, ScrollView, Dimensions, Alert } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+  ScrollView,
+  Dimensions,
+  Alert,
+} from 'react-native';
 import styled from 'styled-components/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +28,7 @@ const Container = styled.ScrollView.attrs({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing.md,
-    paddingBottom: theme.spacing.xl, /* Added for extra bottom space */
+    paddingBottom: theme.spacing.xl /* Added for extra bottom space */,
   },
 })`
   flex: 1;
@@ -152,7 +162,7 @@ const ButtonContainer = styled.View`
 `;
 
 const ProfileSetup = ({ navigation }) => {
-  const setUser = useAuthStore((state) => state.setUser);
+  const setUser = useAuthStore(state => state.setUser);
   const [profilePic, setProfilePic] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [bio, setBio] = useState('');
@@ -199,9 +209,13 @@ const ProfileSetup = ({ navigation }) => {
 
   const handlePhotoUpload = async (isProfilePic = true) => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Denied', 'Permission to access media library is required!');
+        Alert.alert(
+          'Permission Denied',
+          'Permission to access media library is required!'
+        );
         return;
       }
 
@@ -217,7 +231,11 @@ const ProfileSetup = ({ navigation }) => {
         if (Platform.OS === 'web') {
           const response = await fetch(result.assets[0].uri);
           const blob = await response.blob();
-          formData.append('photo', blob, isProfilePic ? 'profile-pic.jpg' : 'photo.jpg');
+          formData.append(
+            'photo',
+            blob,
+            isProfilePic ? 'profile-pic.jpg' : 'photo.jpg'
+          );
         } else {
           formData.append('photo', {
             uri: result.assets[0].uri,
@@ -234,44 +252,57 @@ const ProfileSetup = ({ navigation }) => {
         if (response.data.success) {
           if (isProfilePic) {
             setProfilePic(response.data.data.selfieUrl);
-            setUser((prev) => ({ ...prev, selfie: response.data.data.selfieUrl }));
-          } else {
-            setPhotos((prev) => [...prev, { url: response.data.data.url, _id: response.data.data._id }]);
-            setUser((prev) => ({
+            setUser(prev => ({
               ...prev,
-              photos: [...prev.photos, { url: response.data.data.url, _id: response.data.data._id }],
+              selfie: response.data.data.selfieUrl,
+            }));
+          } else {
+            setPhotos(prev => [
+              ...prev,
+              { url: response.data.data.url, _id: response.data.data._id },
+            ]);
+            setUser(prev => ({
+              ...prev,
+              photos: [
+                ...prev.photos,
+                { url: response.data.data.url, _id: response.data.data._id },
+              ],
             }));
           }
-          setErrors((prev) => ({ ...prev, profilePic: null, photos: null }));
+          setErrors(prev => ({ ...prev, profilePic: null, photos: null }));
           triggerHaptic('medium');
         } else {
-          throw new Error(`Failed to upload ${isProfilePic ? 'profile' : 'additional'} photo`);
+          throw new Error(
+            `Failed to upload ${isProfilePic ? 'profile' : 'additional'} photo`
+          );
         }
       }
     } catch (error) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
-        [isProfilePic ? 'profilePic' : 'photos']: error.message || `Failed to upload ${isProfilePic ? 'profile' : 'additional'} photo`,
+        [isProfilePic ? 'profilePic' : 'photos']:
+          error.message ||
+          `Failed to upload ${isProfilePic ? 'profile' : 'additional'} photo`,
       }));
     }
   };
 
-  const handleDeletePhoto = async (photoId) => {
+  const handleDeletePhoto = async photoId => {
     try {
       const response = await api.delete(`/users/photos/${photoId}`);
       if (response.data.success) {
-        setPhotos((prev) => prev.filter((photo) => photo._id !== photoId));
-        setUser((prev) => ({
+        setPhotos(prev => prev.filter(photo => photo._id !== photoId));
+        setUser(prev => ({
           ...prev,
-          photos: prev.photos.filter((photo) => photo._id !== photoId),
+          photos: prev.photos.filter(photo => photo._id !== photoId),
         }));
-        setErrors((prev) => ({ ...prev, photos: null }));
+        setErrors(prev => ({ ...prev, photos: null }));
         Alert.alert('Success', 'Photo deleted successfully!');
       } else {
         throw new Error('Failed to delete photo');
       }
     } catch (error) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         photos: error.message || 'Failed to delete photo',
       }));
@@ -292,7 +323,10 @@ const ProfileSetup = ({ navigation }) => {
       }
     } catch (error) {
       setErrors({
-        general: error.response?.status === 401 ? 'Unauthorized: Please log in again.' : 'Profile setup failed. Please try again.',
+        general:
+          error.response?.status === 401
+            ? 'Unauthorized: Please log in again.'
+            : 'Profile setup failed. Please try again.',
       });
     }
   };
@@ -301,11 +335,16 @@ const ProfileSetup = ({ navigation }) => {
     <Container>
       <LogoContainer>
         <LogoText>LIF</LogoText>
-        <Ionicons name="heart" size={48} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+        <Ionicons
+          name="heart"
+          size={48}
+          color={theme.colors.accent.pink}
+          style={{ marginLeft: theme.spacing.sm }}
+        />
       </LogoContainer>
-      
+
       <HeaderText variant="h1">Set Up Your Profile</HeaderText>
-      
+
       <Animated.View style={{ transform: [{ scale: photoScale }] }}>
         <PhotoUploadContainer onPress={() => handlePhotoUpload(true)}>
           {profilePic ? (
@@ -315,31 +354,51 @@ const ProfileSetup = ({ navigation }) => {
           )}
         </PhotoUploadContainer>
       </Animated.View>
-      
+
       {errors.profilePic && <ErrorText>{errors.profilePic}</ErrorText>}
-      
+
       <PhotosGrid>
-        {photos.map((photo) => (
+        {photos.map(photo => (
           <PhotoWrapper key={photo._id}>
             <GridPhoto source={{ uri: photo.url }} resizeMode="cover" />
             <DeletePhotoButton onPress={() => handleDeletePhoto(photo._id)}>
-              <Ionicons name="close-circle" size={16} color={theme.colors.text.primary} />
+              <Ionicons
+                name="close-circle"
+                size={16}
+                color={theme.colors.text.primary}
+              />
             </DeletePhotoButton>
           </PhotoWrapper>
         ))}
         {photos.length < 9 && (
           <AddPhotoButton onPress={() => handlePhotoUpload(false)}>
-            <Ionicons name="add" size={32} color={theme.colors.text.secondary} />
-            <Text style={{ color: theme.colors.text.secondary, marginTop: theme.spacing.xs, fontSize: 12 }}>
+            <Ionicons
+              name="add"
+              size={32}
+              color={theme.colors.text.secondary}
+            />
+            <Text
+              style={{
+                color: theme.colors.text.secondary,
+                marginTop: theme.spacing.xs,
+                fontSize: 12,
+              }}
+            >
               Add Photo
             </Text>
           </AddPhotoButton>
         )}
       </PhotosGrid>
-      
+
       {errors.photos && <ErrorText>{errors.photos}</ErrorText>}
-      
-      <Animated.View style={{ transform: [{ translateY: bioTranslate }], width: '100%', alignItems: 'center' }}>
+
+      <Animated.View
+        style={{
+          transform: [{ translateY: bioTranslate }],
+          width: '100%',
+          alignItems: 'center',
+        }}
+      >
         <BioInput
           value={bio}
           onChangeText={setBio}
@@ -348,10 +407,10 @@ const ProfileSetup = ({ navigation }) => {
           multiline
         />
       </Animated.View>
-      
+
       {errors.bio && <ErrorText>{errors.bio}</ErrorText>}
       {errors.general && <ErrorText>{errors.general}</ErrorText>}
-      
+
       <ButtonContainer>
         <Animated.View style={{ transform: [{ scale: continueButtonScale }] }}>
           <Button

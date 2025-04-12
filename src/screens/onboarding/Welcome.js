@@ -1,7 +1,10 @@
 import React from 'react';
 import { Animated, Easing, Platform, Dimensions } from 'react-native';
 import styled from 'styled-components/native';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import theme from '../../styles/theme';
 import Text from '../../components/common/Text';
 import Button from '../../components/common/Button';
@@ -82,7 +85,12 @@ const Welcome = ({ navigation }) => {
     <Container>
       <LogoContainer>
         <LogoText>LIF</LogoText>
-        <Ionicons name="heart" size={72} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+        <Ionicons
+          name="heart"
+          size={72}
+          color={theme.colors.accent.pink}
+          style={{ marginLeft: theme.spacing.sm }}
+        />
       </LogoContainer>
       <Animated.View style={{ opacity: titleOpacity }}>
         <Text
@@ -104,7 +112,7 @@ const Welcome = ({ navigation }) => {
           variant="body"
           style={{
             color: theme.colors.text.secondary,
-            fontSize: 20
+            fontSize: 20,
           }}
         >
           Find Your Match Today

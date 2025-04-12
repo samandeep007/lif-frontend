@@ -1,5 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { Modal, View, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  Modal,
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
 import styled from 'styled-components/native';
 import theme from '../styles/theme';
 import Text from './common/Text';
@@ -44,7 +51,8 @@ const PaginationDot = styled.View`
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background-color: ${props => (props.active ? theme.colors.accent.pink : theme.colors.text.secondary)};
+  background-color: ${props =>
+    props.active ? theme.colors.accent.pink : theme.colors.text.secondary};
   margin: 0 ${theme.spacing.xs}px;
 `;
 
@@ -73,19 +81,20 @@ const UserDetailsModal = ({ visible, onClose, user }) => {
 
   if (!user) return null;
 
-  const photos = user.photos && user.photos.length > 0
-    ? user.photos.map(photo => photo.url || 'https://via.placeholder.com/300')
-    : user.selfie
-      ? [user.selfie]
-      : ['https://via.placeholder.com/300'];
+  const photos =
+    user.photos && user.photos.length > 0
+      ? user.photos.map(photo => photo.url || 'https://via.placeholder.com/300')
+      : user.selfie
+        ? [user.selfie]
+        : ['https://via.placeholder.com/300'];
 
-  const handleScroll = (event) => {
+  const handleScroll = event => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(contentOffsetX / (SCREEN_WIDTH - 40));
     setCurrentPhotoIndex(index);
   };
 
-  const handlePhotoTap = (photoUrl) => {
+  const handlePhotoTap = photoUrl => {
     console.log(`Photo tapped: ${photoUrl}`);
     setSelectedPhotoUrl(photoUrl);
     setMagnifierVisible(true);
@@ -94,13 +103,19 @@ const UserDetailsModal = ({ visible, onClose, user }) => {
   const handlePrevPress = () => {
     const newIndex = Math.max(0, currentPhotoIndex - 1);
     setCurrentPhotoIndex(newIndex);
-    scrollViewRef.current.scrollTo({ x: newIndex * (SCREEN_WIDTH - 40), animated: true });
+    scrollViewRef.current.scrollTo({
+      x: newIndex * (SCREEN_WIDTH - 40),
+      animated: true,
+    });
   };
 
   const handleNextPress = () => {
     const newIndex = Math.min(photos.length - 1, currentPhotoIndex + 1);
     setCurrentPhotoIndex(newIndex);
-    scrollViewRef.current.scrollTo({ x: newIndex * (SCREEN_WIDTH - 40), animated: true });
+    scrollViewRef.current.scrollTo({
+      x: newIndex * (SCREEN_WIDTH - 40),
+      animated: true,
+    });
   };
 
   return (
@@ -114,7 +129,11 @@ const UserDetailsModal = ({ visible, onClose, user }) => {
         <Header>
           <Text variant="h1">{`${user.name}, ${user.age}`}</Text>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={30} color={theme.colors.text.primary} />
+            <Ionicons
+              name="close"
+              size={30}
+              color={theme.colors.text.primary}
+            />
           </TouchableOpacity>
         </Header>
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -142,23 +161,35 @@ const UserDetailsModal = ({ visible, onClose, user }) => {
                 <PrevButton
                   onPress={handlePrevPress}
                   disabled={currentPhotoIndex === 0}
-                  style={{ transform: [{ translateY: -((SCREEN_HEIGHT * 0.4) / 2) }] }} // Center vertically
+                  style={{
+                    transform: [{ translateY: -((SCREEN_HEIGHT * 0.4) / 2) }],
+                  }} // Center vertically
                 >
                   <Ionicons
                     name="chevron-back"
                     size={24}
-                    color={currentPhotoIndex === 0 ? theme.colors.text.secondary : '#fff'}
+                    color={
+                      currentPhotoIndex === 0
+                        ? theme.colors.text.secondary
+                        : '#fff'
+                    }
                   />
                 </PrevButton>
                 <NextButton
                   onPress={handleNextPress}
                   disabled={currentPhotoIndex === photos.length - 1}
-                  style={{ transform: [{ translateY: -((SCREEN_HEIGHT * 0.4) / 2) }] }} // Center vertically
+                  style={{
+                    transform: [{ translateY: -((SCREEN_HEIGHT * 0.4) / 2) }],
+                  }} // Center vertically
                 >
                   <Ionicons
                     name="chevron-forward"
                     size={24}
-                    color={currentPhotoIndex === photos.length - 1 ? theme.colors.text.secondary : '#fff'}
+                    color={
+                      currentPhotoIndex === photos.length - 1
+                        ? theme.colors.text.secondary
+                        : '#fff'
+                    }
                   />
                 </NextButton>
                 <PaginationContainer>

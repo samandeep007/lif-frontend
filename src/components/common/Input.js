@@ -51,9 +51,7 @@ const Input = ({
           secureTextEntry={secureTextEntry}
         />
       </InputContainer>
-      <ErrorWrapper>
-        {error && <ErrorText>{error}</ErrorText>}
-      </ErrorWrapper>
+      <ErrorWrapper>{error && <ErrorText>{error}</ErrorText>}</ErrorWrapper>
     </>
   );
 };

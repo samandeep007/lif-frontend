@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Add this import
 import styled from 'styled-components/native';
 import theme from '../styles/theme';
@@ -50,7 +56,7 @@ const EmptyMessage = styled(Text)`
 `;
 
 const ConfessionScreen = () => {
-  const userId = useAuthStore((state) => state.user?._id);
+  const userId = useAuthStore(state => state.user?._id);
   const [confessionText, setConfessionText] = useState('');
   const [receivedConfessions, setReceivedConfessions] = useState([]);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -66,7 +72,7 @@ const ConfessionScreen = () => {
       socket.emit('join', userId);
     });
 
-    socket.on('new_notification', (notification) => {
+    socket.on('new_notification', notification => {
       if (notification.type === 'confession_received') {
         fetchRandomConfession();
       }
@@ -84,7 +90,9 @@ const ConfessionScreen = () => {
     }
 
     try {
-      const response = await api.post('/confessions', { content: confessionText });
+      const response = await api.post('/confessions', {
+        content: confessionText,
+      });
       if (response.data.success) {
         setConfessionText('');
         setErrorMessage(null);
@@ -93,7 +101,9 @@ const ConfessionScreen = () => {
       }
     } catch (error) {
       console.error('Error sending confession:', error);
-      setErrorMessage('Failed to send confession: ' + (error.message || 'Network error'));
+      setErrorMessage(
+        'Failed to send confession: ' + (error.message || 'Network error')
+      );
     }
   };
 
@@ -121,7 +131,13 @@ const ConfessionScreen = () => {
 
   return (
     <Container>
-      <Text variant="h1" style={{ color: theme.colors.text.primary, marginBottom: theme.spacing.lg }}>
+      <Text
+        variant="h1"
+        style={{
+          color: theme.colors.text.primary,
+          marginBottom: theme.spacing.lg,
+        }}
+      >
         Confessions
       </Text>
       <InputContainer>
@@ -152,7 +168,13 @@ const ConfessionScreen = () => {
         </Text>
       </TouchableOpacity>
       {errorMessage && (
-        <Text style={{ color: theme.colors.accent.red, marginBottom: theme.spacing.md, textAlign: 'center' }}>
+        <Text
+          style={{
+            color: theme.colors.accent.red,
+            marginBottom: theme.spacing.md,
+            textAlign: 'center',
+          }}
+        >
           {errorMessage}
         </Text>
       )}
@@ -160,7 +182,9 @@ const ConfessionScreen = () => {
         data={receivedConfessions}
         renderItem={renderConfession}
         keyExtractor={(item, index) => index.toString()}
-        ListEmptyComponent={<EmptyMessage>No confessions received yet.</EmptyMessage>}
+        ListEmptyComponent={
+          <EmptyMessage>No confessions received yet.</EmptyMessage>
+        }
       />
     </Container>
   );

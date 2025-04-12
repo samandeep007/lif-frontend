@@ -56,19 +56,16 @@ const SignUpButton = styled(Button)`
 `;
 
 const Login = ({ navigation }) => {
-  const setUser = useAuthStore((state) => state.setUser);
-  const setToken = useAuthStore((state) => state.setToken);
-  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
+  const setUser = useAuthStore(state => state.setUser);
+  const setToken = useAuthStore(state => state.setToken);
+  const setIsAuthenticated = useAuthStore(state => state.setIsAuthenticated);
   const [form, setForm] = useState({
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
 
-  const inputTranslates = [
-    new Animated.Value(50),
-    new Animated.Value(50),
-  ];
+  const inputTranslates = [new Animated.Value(50), new Animated.Value(50)];
   const loginButtonScale = new Animated.Value(0.9);
 
   useEffect(() => {
@@ -154,7 +151,12 @@ const Login = ({ navigation }) => {
     <Container>
       <LogoContainer>
         <LogoText>LIF</LogoText>
-        <Ionicons name="heart" size={48} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+        <Ionicons
+          name="heart"
+          size={48}
+          color={theme.colors.accent.pink}
+          style={{ marginLeft: theme.spacing.sm }}
+        />
       </LogoContainer>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         Welcome Back
@@ -168,7 +170,7 @@ const Login = ({ navigation }) => {
         >
           <Input
             value={form[field]}
-            onChangeText={(text) => setForm({ ...form, [field]: text })}
+            onChangeText={text => setForm({ ...form, [field]: text })}
             placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
             error={errors[field]}
             secureTextEntry={field === 'password'}
@@ -176,9 +178,7 @@ const Login = ({ navigation }) => {
         </InputContainer>
       ))}
       <ErrorWrapper>
-        {errors.general && (
-          <ErrorText>{errors.general}</ErrorText>
-        )}
+        {errors.general && <ErrorText>{errors.general}</ErrorText>}
       </ErrorWrapper>
       <ButtonContainer style={{ transform: [{ scale: loginButtonScale }] }}>
         <Button title="Login" onPress={handleLogin} />

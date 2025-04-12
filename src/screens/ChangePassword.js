@@ -68,7 +68,9 @@ const ChangePasswordScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      setErrorMessage('Failed to change password: ' + (error.message || 'Network error'));
+      setErrorMessage(
+        'Failed to change password: ' + (error.message || 'Network error')
+      );
     }
   };
 
@@ -76,9 +78,19 @@ const ChangePasswordScreen = ({ navigation }) => {
     <Container>
       <Heading>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={theme.colors.text.primary}
+          />
         </TouchableOpacity>
-        <Text variant="h1" style={{ color: theme.colors.text.primary, marginLeft: theme.spacing.md }}>
+        <Text
+          variant="h1"
+          style={{
+            color: theme.colors.text.primary,
+            marginLeft: theme.spacing.md,
+          }}
+        >
           Change Password
         </Text>
       </Heading>
@@ -103,9 +115,7 @@ const ChangePasswordScreen = ({ navigation }) => {
         </Text>
       </Button>
 
-      {errorMessage && (
-        <ErrorMessage>{errorMessage}</ErrorMessage>
-      )}
+      {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
     </Container>
   );
 };

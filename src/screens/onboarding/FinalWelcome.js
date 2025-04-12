@@ -61,10 +61,7 @@ const FinalWelcome = () => {
           marginTop: theme.spacing.lg,
         }}
       >
-        <Button
-          title="Start Swiping"
-          onPress={handleStartSwiping}
-        />
+        <Button title="Start Swiping" onPress={handleStartSwiping} />
       </Animated.View>
     </Container>
   );

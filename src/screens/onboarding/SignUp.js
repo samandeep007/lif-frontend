@@ -139,7 +139,12 @@ const SignUp = ({ navigation, setFormData }) => {
     <Container>
       <LogoContainer>
         <LogoText>LIF</LogoText>
-        <Ionicons name="heart" size={48} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+        <Ionicons
+          name="heart"
+          size={48}
+          color={theme.colors.accent.pink}
+          style={{ marginLeft: theme.spacing.sm }}
+        />
       </LogoContainer>
       <Text variant="h1" style={{ marginBottom: theme.spacing.lg }}>
         Create Your Account
@@ -161,9 +166,7 @@ const SignUp = ({ navigation, setFormData }) => {
         </InputContainer>
       ))}
       <ErrorWrapper>
-        {errors.general && (
-          <ErrorText>{errors.general}</ErrorText>
-        )}
+        {errors.general && <ErrorText>{errors.general}</ErrorText>}
       </ErrorWrapper>
       <ButtonContainer
         style={{

@@ -12,6 +12,8 @@ import useAuthStore from '../store/authStore';
 const Container = styled.View`
   flex: 1;
   background-color: ${theme.colors.background};
+  align-items: center;
+  justify-content: center;
 `;
 
 const Header = styled.View`
@@ -106,7 +108,12 @@ const SwipeScreen = () => {
   }, []);
 
   const handleSwipe = async (direction, swipedUser) => {
-    console.log('handleSwipe called with direction:', direction, 'for user:', swipedUser);
+    console.log(
+      'handleSwipe called with direction:',
+      direction,
+      'for user:',
+      swipedUser
+    );
     if (!swipedUser || !swipedUser._id) {
       console.error('Invalid user data in handleSwipe:', swipedUser);
       setError('Invalid user data. Cannot swipe.');
@@ -129,8 +136,16 @@ const SwipeScreen = () => {
       console.log('Swipe recorded:', response.data);
       if (response.data.success && response.data.data?.isMatch) {
         setCurrentMatch({
-          user1Photo: user.selfie || (user.photos && user.photos.length > 0 ? user.photos[0].url : 'https://via.placeholder.com/300'),
-          user2Photo: swipedUser.selfie || (swipedUser.photos && swipedUser.photos.length > 0 ? swipedUser.photos[0].url : 'https://via.placeholder.com/300'),
+          user1Photo:
+            user.selfie ||
+            (user.photos && user.photos.length > 0
+              ? user.photos[0].url
+              : 'https://via.placeholder.com/300'),
+          user2Photo:
+            swipedUser.selfie ||
+            (swipedUser.photos && swipedUser.photos.length > 0
+              ? swipedUser.photos[0].url
+              : 'https://via.placeholder.com/300'),
           user2Name: swipedUser.name,
         });
         setMatchModalVisible(true);
@@ -148,7 +163,12 @@ const SwipeScreen = () => {
       <Header>
         <LogoContainer>
           <LogoText>LIF</LogoText>
-          <Ionicons name="heart" size={40} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+          <Ionicons
+            name="heart"
+            size={40}
+            color={theme.colors.accent.pink}
+            style={{ marginLeft: theme.spacing.sm }}
+          />
         </LogoContainer>
       </Header>
       <Content>

@@ -11,7 +11,10 @@ const Container = styled(TouchableOpacity)`
   margin: ${theme.spacing.sm}px ${theme.spacing.md}px;
   padding: ${props => (props.isImage ? '0px' : theme.spacing.sm + 'px')};
   border-radius: ${theme.borderRadius.medium}px;
-  background-color: ${props => (props.isSent ? theme.colors.accent.pink : theme.colors.text.secondary + '30')};
+  background-color: ${props =>
+    props.isSent
+      ? theme.colors.accent.pink
+      : theme.colors.text.secondary + '30'};
   align-self: ${props => (props.isSent ? 'flex-end' : 'flex-start')};
   shadow-color: #000;
   shadow-opacity: 0.1;
@@ -27,7 +30,10 @@ const MessageImage = styled(Image)`
 
 const Timestamp = styled(Text)`
   font-size: 12px;
-  color: ${props => (props.isSent ? theme.colors.text.primary + '80' : theme.colors.text.secondary)};
+  color: ${props =>
+    props.isSent
+      ? theme.colors.text.primary + '80'
+      : theme.colors.text.secondary};
   margin-top: ${theme.spacing.xs}px;
   align-self: ${props => (props.isSent ? 'flex-end' : 'flex-start')};
 `;
@@ -46,11 +52,13 @@ const DateSeparatorText = styled(Text)`
 `;
 
 // Format timestamp to show "Today", "Yesterday", or the date
-const formatTimestamp = (date) => {
+const formatTimestamp = date => {
   const today = new Date();
   const messageDate = new Date(date);
   const isToday = messageDate.toDateString() === today.toDateString();
-  const isYesterday = new Date(today.setDate(today.getDate() - 1)).toDateString() === messageDate.toDateString();
+  const isYesterday =
+    new Date(today.setDate(today.getDate() - 1)).toDateString() ===
+    messageDate.toDateString();
 
   if (isToday) {
     return `Today, ${messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -61,7 +69,13 @@ const formatTimestamp = (date) => {
   }
 };
 
-const MessageBubble = ({ message, isSent, showDateSeparator, date, onDelete }) => {
+const MessageBubble = ({
+  message,
+  isSent,
+  showDateSeparator,
+  date,
+  onDelete,
+}) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleLongPress = () => {
@@ -89,13 +103,24 @@ const MessageBubble = ({ message, isSent, showDateSeparator, date, onDelete }) =
           <DateSeparatorText>{date}</DateSeparatorText>
         </DateSeparator>
       )}
-      <Container isSent={isSent} isImage={message.isImage} onLongPress={handleLongPress}>
+      <Container
+        isSent={isSent}
+        isImage={message.isImage}
+        onLongPress={handleLongPress}
+      >
         {message.isImage ? (
           <TouchableOpacity onPress={() => setModalVisible(true)}>
             <MessageImage source={{ uri: message.content }} />
           </TouchableOpacity>
         ) : (
-          <Text variant="body" style={{ color: isSent ? theme.colors.text.primary : theme.colors.text.primary }}>
+          <Text
+            variant="body"
+            style={{
+              color: isSent
+                ? theme.colors.text.primary
+                : theme.colors.text.primary,
+            }}
+          >
             {message.content}
           </Text>
         )}

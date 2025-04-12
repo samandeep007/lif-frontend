@@ -9,7 +9,11 @@ import MainTabs from './src/navigation/MainTabs';
 import theme from './src/styles/theme';
 import useAuthStore from './src/store/authStore';
 import api from './src/api/api';
-import { getItemAsync, setItemAsync, deleteItemAsync } from './src/utils/secureStore';
+import {
+  getItemAsync,
+  setItemAsync,
+  deleteItemAsync,
+} from './src/utils/secureStore';
 
 // Enable screens for React Navigation
 import { enableScreens } from 'react-native-screens';
@@ -17,10 +21,10 @@ enableScreens();
 
 const App = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const setUser = useAuthStore((state) => state.setUser);
-  const setToken = useAuthStore((state) => state.setToken);
-  const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const setUser = useAuthStore(state => state.setUser);
+  const setToken = useAuthStore(state => state.setToken);
+  const setIsAuthenticated = useAuthStore(state => state.setIsAuthenticated);
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -71,7 +75,7 @@ const App = () => {
       <NavigationContainer>
         <StatusBar style="light" backgroundColor={theme.colors.background} />
         {isAuthenticated ? <MainTabs /> : <OnboardingStack />}
-        <Toast ref={(ref) => Toast.setRef(ref)} />
+        <Toast ref={ref => Toast.setRef(ref)} />
       </NavigationContainer>
     </SafeAreaProvider>
   );

@@ -34,7 +34,7 @@ const ProfileStackNavigator = ({ navigation }) => {
 const MainTabs = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('Swipe');
 
-  const handleTabPress = (tabName) => {
+  const handleTabPress = tabName => {
     triggerHaptic('light');
     setActiveTab(tabName);
   };
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.text.secondary + '33',
     paddingHorizontal: 20,
     paddingTop: 10,
+    marginBottom: 20,
   },
   tabItem: {
     flex: 1,
