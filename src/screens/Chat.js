@@ -7,7 +7,8 @@ import theme from '../styles/theme';
 import Text from '../components/common/Text';
 import ChatListItem from '../components/ChatListItem';
 import MessageBubble from '../components/MessageBubble';
-import UserDetailsModal from '../components/UserDetailsModal'; // Import the modal
+import UserDetailsModal from '../components/UserDetailsModal';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal'; // Import the new modal
 import api from '../api/api';
 import useAuthStore from '../store/authStore';
 import { initSocket, disconnectSocket } from '../utils/socket';
@@ -105,7 +106,9 @@ const ChatScreen = ({ navigation }) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [typing, setTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
+  const [modalVisible, setModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // State for delete confirmation modal
+  const [chatToDelete, setChatToDelete] = useState(null); // Track the chat to delete
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const socketRef = useRef(null);
@@ -113,7 +116,9 @@ const ChatScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
+        console.log('Fetching chats from /chats');
         const response = await api.get('/chats');
+        console.log('Chats response:', response.data);
         if (response.data.success) {
           setChats(response.data.data);
         }
@@ -175,18 +180,85 @@ const ChatScreen = ({ navigation }) => {
   }, [chats, selectedChat, userId]);
 
   const handleSelectChat = async (chat) => {
+    console.log('handleSelectChat called for chat with matchId:', chat.matchId);
     setSelectedChat(chat);
     setSelectedImage(null);
     try {
-      const response = await api.get(`/chats/${chat.matchId}/messages`);
-      if (response.data.success) {
-        setMessages(response.data.data);
+      // Fetch the full user details for the other user in the chat
+      const userResponse = await api.get(`/users/${chat.otherUser.id}`);
+      console.log('Full other user details response:', userResponse.data);
+      if (userResponse.data.success) {
+        const fullOtherUser = userResponse.data.data;
+        // Update the selectedChat with the full otherUser data
+        setSelectedChat({
+          ...chat,
+          otherUser: fullOtherUser,
+        });
+      } else {
+        console.error('Failed to fetch other user details:', userResponse.data.message);
+        setErrorMessage('Failed to load user details: ' + userResponse.data.message);
+      }
+
+      // Fetch the chat messages
+      console.log('Fetching messages for matchId:', chat.matchId);
+      const messagesResponse = await api.get(`/chats/${chat.matchId}/messages`);
+      console.log('Messages response:', messagesResponse.data);
+      if (messagesResponse.data.success) {
+        setMessages(messagesResponse.data.data);
         flatListRef.current?.scrollToEnd({ animated: true });
       }
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      setErrorMessage('Failed to load messages: ' + (error.message || 'Network error'));
+      console.error('Error fetching messages or user details:', error);
+      setErrorMessage('Failed to load messages or user details: ' + (error.message || 'Network error'));
     }
+  };
+
+  const handleDeleteChat = (matchId, otherUserName) => {
+    console.log(`handleDeleteChat called for matchId: ${matchId}, user: ${otherUserName}`);
+    setChatToDelete({ matchId, otherUserName });
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteChat = async () => {
+    if (!chatToDelete) return;
+
+    const { matchId } = chatToDelete;
+    try {
+      console.log(`Confirmed deletion for matchId: ${matchId}`);
+      console.log(`Making DELETE request to /chats/${matchId}`);
+      const response = await api.delete(`/chats/${matchId}`);
+      console.log('Delete chat response:', response.data);
+      if (response.data.success) {
+        console.log(`Successfully deleted chat with matchId: ${matchId}`);
+        // Remove the chat from the chats state
+        setChats(prev => {
+          const updatedChats = prev.filter(chat => chat.matchId !== matchId);
+          console.log('Updated chats state:', updatedChats);
+          return updatedChats;
+        });
+        // If the deleted chat is the currently selected chat, deselect it
+        if (selectedChat?.matchId === matchId) {
+          console.log('Deselecting current chat as it was deleted');
+          setSelectedChat(null);
+          setMessages([]);
+        }
+      } else {
+        console.error('Delete chat request failed:', response.data.message);
+        setErrorMessage('Failed to delete chat: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      setErrorMessage('Failed to delete chat: ' + (error.message || 'Network error'));
+    } finally {
+      setDeleteModalVisible(false);
+      setChatToDelete(null);
+    }
+  };
+
+  const cancelDeleteChat = () => {
+    console.log('Delete chat canceled');
+    setDeleteModalVisible(false);
+    setChatToDelete(null);
   };
 
   const handleSendMessage = async () => {
@@ -300,6 +372,7 @@ const ChatScreen = ({ navigation }) => {
   };
 
   const handleUserNameClick = () => {
+    console.log('User name clicked, opening modal with user:', selectedChat?.otherUser);
     setModalVisible(true);
   };
 
@@ -325,7 +398,7 @@ const ChatScreen = ({ navigation }) => {
     return (
       <Container>
         <Heading>
-          <Text variant="h1" style={{ color: theme.colors.text.primary, marginBottom: theme.spacing.lg }}>
+          <Text variant="h1" style={{ color: theme.colors.text.primary }}>
             Chats
           </Text>
         </Heading>
@@ -334,11 +407,21 @@ const ChatScreen = ({ navigation }) => {
             data={chats}
             keyExtractor={(item) => item.matchId}
             renderItem={({ item }) => (
-              <ChatListItem chat={item} onPress={() => handleSelectChat(item)} />
+              <ChatListItem
+                chat={item}
+                onPress={() => handleSelectChat(item)}
+                onDelete={() => handleDeleteChat(item.matchId, item.otherUser.name)}
+              />
             )}
             ListEmptyComponent={<Text variant="body" style={{ textAlign: 'center', padding: theme.spacing.md }}>No chats yet!</Text>}
           />
         </ChatListContainer>
+        <DeleteConfirmationModal
+          visible={deleteModalVisible}
+          onClose={cancelDeleteChat}
+          onConfirm={confirmDeleteChat}
+          userName={chatToDelete?.otherUserName || ''}
+        />
       </Container>
     );
   }
@@ -418,6 +501,12 @@ const ChatScreen = ({ navigation }) => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         user={selectedChat?.otherUser}
+      />
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        onClose={cancelDeleteChat}
+        onConfirm={confirmDeleteChat}
+        userName={chatToDelete?.otherUserName || ''}
       />
     </Container>
   );

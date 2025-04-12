@@ -8,8 +8,9 @@ import api from '../api/api';
 import useAuthStore from '../store/authStore';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // Import navigation hook
-import { deleteItemAsync } from '../utils/secureStore'; // Import secure storage utility
+import { useNavigation } from '@react-navigation/native';
+import { deleteItemAsync } from '../utils/secureStore';
+import ImageModal from '../components/ImageModal'; // Import ImageModal
 
 const Container = styled.ScrollView`
   flex: 1;
@@ -233,8 +234,10 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
   const [relationshipType, setRelationshipType] = useState(user?.filterPreferences?.relationshipType || 'any');
   const [errorMessage, setErrorMessage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const navigation = useNavigation(); // Use navigation hook
-  const { setToken, setIsAuthenticated } = useAuthStore(); // Access auth store setters
+  const [imageModalVisible, setImageModalVisible] = useState(false); // State for ImageModal visibility
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null); // State for selected image URL
+  const navigation = useNavigation();
+  const { setToken, setIsAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -448,6 +451,12 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
     }
   };
 
+  const handlePhotoClick = (url) => {
+    console.log('Photo clicked, opening ImageModal with URL:', url);
+    setSelectedImageUrl(url);
+    setImageModalVisible(true);
+  };
+
   const handleLogout = async () => {
     console.log('Logout button clicked');
     try {
@@ -485,7 +494,9 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
         </EditButton>
         <ProfilePhotoWrapper>
           {profilePic ? (
-            <ProfilePhoto source={{ uri: profilePic }} />
+            <TouchableOpacity onPress={() => handlePhotoClick(profilePic)}>
+              <ProfilePhoto source={{ uri: profilePic }} />
+            </TouchableOpacity>
           ) : (
             <View style={{
               width: 180,
@@ -517,7 +528,9 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
       <PhotosGrid>
         {photos.map(photo => (
           <PhotoWrapper key={photo._id}>
-            <Photo source={{ uri: photo.url }} />
+            <TouchableOpacity onPress={() => handlePhotoClick(photo.url)}>
+              <Photo source={{ uri: photo.url }} />
+            </TouchableOpacity>
             {isEditing && (
               <DeletePhotoButton onPress={() => handleDeletePhoto(photo._id)}>
                 <Ionicons name="close-circle" size={20} color={theme.colors.text.primary} />
@@ -694,6 +707,12 @@ const ProfileScreen = ({ navigation: propNavigation }) => {
       {errorMessage && (
         <ErrorMessage>{errorMessage}</ErrorMessage>
       )}
+
+      <ImageModal
+        visible={imageModalVisible}
+        imageUrl={selectedImageUrl}
+        onClose={() => setImageModalVisible(false)}
+      />
     </Container>
   );
 };

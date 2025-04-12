@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Animated, Easing, Image, TouchableOpacity, TextInput, Platform, View } from 'react-native';
+import { Animated, Easing, Image, TouchableOpacity, TextInput, Platform, View, Dimensions } from 'react-native';
 import styled from 'styled-components/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,46 +9,64 @@ import Button from '../../components/common/Button';
 import api from '../../api/api';
 import { triggerHaptic } from '../../utils/haptics';
 import useAuthStore from '../../store/authStore';
+import ImageModal from '../../components/ImageModal';
+
+// Get screen dimensions for responsive design
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const MAX_WIDTH = Math.min(SCREEN_WIDTH - theme.spacing.md * 2, 500);
 
 const Container = styled.View`
   flex: 1;
   background-color: ${theme.colors.background};
+`;
+
+const Header = styled.View`
+  padding: ${theme.spacing.lg}px;
+  border-bottom-width: 1px;
+  border-bottom-color: ${theme.colors.text.secondary}20;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  padding: ${theme.spacing.md}px; /* Reduced padding */
+  background-color: ${theme.colors.text.primary}10;
+`;
+
+const ContentContainer = styled.ScrollView`
+  flex: 1;
+  padding: ${theme.spacing.md}px;
+  padding-bottom: ${theme.spacing.xl}px; /* Add padding to ensure button is fully visible */
 `;
 
 const PhotoUploadContainer = styled(TouchableOpacity)`
-  width: 120px; /* Reduced from 150px */
-  height: 120px; /* Reduced from 150px */
-  border-radius: 60px; /* Adjusted for new size */
+  width: ${SCREEN_WIDTH * 0.3}px;
+  height: ${SCREEN_WIDTH * 0.3}px;
+  border-radius: ${SCREEN_WIDTH * 0.15}px;
   border-width: 2px;
   border-color: ${theme.colors.text.primary};
   justify-content: center;
   align-items: center;
-  margin-bottom: ${theme.spacing.md}px; /* Reduced margin */
+  margin-bottom: ${theme.spacing.md}px;
 `;
 
 const Photo = styled(Image)`
-  width: 120px; /* Reduced from 150px */
-  height: 120px; /* Reduced from 150px */
-  border-radius: 60px; /* Adjusted for new size */
+  width: 100%;
+  height: 100%;
+  border-radius: ${SCREEN_WIDTH * 0.15}px;
 `;
 
 const PhotosGrid = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: center; /* Centered the grid */
-  padding: ${theme.spacing.sm}px; /* Reduced padding */
+  justify-content: center;
+  padding: ${theme.spacing.sm}px;
   background-color: ${theme.colors.background};
   width: 100%;
 `;
 
 const PhotoWrapper = styled.View`
   position: relative;
-  width: 45%; /* Slightly reduced to fit centered layout */
-  margin-bottom: ${theme.spacing.sm}px; /* Reduced margin */
-  margin-horizontal: ${theme.spacing.xs}px; /* Added small horizontal margin for spacing */
+  width: ${(SCREEN_WIDTH - theme.spacing.sm * 4) / 2}px;
+  margin-bottom: ${theme.spacing.sm}px;
+  margin-horizontal: ${theme.spacing.xs}px;
   border-radius: ${theme.borderRadius.medium}px;
   overflow: hidden;
   shadow-color: #000;
@@ -59,51 +77,56 @@ const PhotoWrapper = styled.View`
 
 const GridPhoto = styled(Image)`
   width: 100%;
-  height: 130px; /* Reduced from 160px */
+  height: ${(SCREEN_WIDTH - theme.spacing.sm * 4) / 2}px;
   border-radius: ${theme.borderRadius.medium}px;
 `;
 
 const DeletePhotoButton = styled(TouchableOpacity)`
   position: absolute;
-  top: 6px; /* Reduced from 8px */
-  right: 6px; /* Reduced from 8px */
+  top: 6px;
+  right: 6px;
   background-color: ${theme.colors.accent.red};
-  border-radius: 10px; /* Reduced from 12px */
-  padding: 3px; /* Reduced from 4px */
+  border-radius: 10px;
+  padding: 3px;
 `;
 
 const AddPhotoButton = styled(TouchableOpacity)`
-  width: 45%; /* Slightly reduced to fit centered layout */
-  height: 130px; /* Reduced from 160px */
+  width: ${(SCREEN_WIDTH - theme.spacing.sm * 4) / 2}px;
+  height: ${(SCREEN_WIDTH - theme.spacing.sm * 4) / 2}px;
   border-radius: ${theme.borderRadius.medium}px;
   background-color: ${theme.colors.text.secondary}20;
   justify-content: center;
   align-items: center;
-  margin-bottom: ${theme.spacing.sm}px; /* Reduced margin */
-  margin-horizontal: ${theme.spacing.xs}px; /* Added small horizontal margin for spacing */
+  margin-bottom: ${theme.spacing.sm}px;
+  margin-horizontal: ${theme.spacing.xs}px;
   border: 2px dashed ${theme.colors.text.secondary};
 `;
 
 const BioInput = styled(TextInput)`
-  width: 500px; /* Reduced from 300px */
-  height: 100px; /* Reduced from 100px */
+  width: ${MAX_WIDTH}px;
+  height: 100px;
   border-radius: ${theme.borderRadius.small}px;
   border-width: 1px;
   border-color: ${theme.colors.text.secondary};
-  padding: ${theme.spacing.sm}px; /* Reduced padding */
-  margin-bottom: ${theme.spacing.sm}px;
+  padding: ${theme.spacing.sm}px;
+  margin-bottom: ${theme.spacing.md}px; /* Increased margin to prevent overlap */
   color: ${theme.colors.text.primary};
   font-family: Poppins-Regular;
-  font-size: 14px; /* Reduced from 16px */
+  font-size: 14px;
   text-align-vertical: top;
-  align-self: center; /* Centered */
+  align-self: center;
 `;
 
 const ErrorText = styled(Text)`
   color: ${theme.colors.accent.red};
-  margin-top: ${theme.spacing.xs}px; /* Reduced margin */
+  margin-top: ${theme.spacing.xs}px;
+  margin-bottom: ${theme.spacing.sm}px; /* Added margin to prevent overlap */
   text-align: center;
-  font-size: 12px; /* Reduced font size */
+  font-size: 12px;
+`;
+
+const AnimatedContainer = styled(Animated.View)`
+  align-items: center;
 `;
 
 const ProfileSetup = ({ navigation }) => {
@@ -112,6 +135,8 @@ const ProfileSetup = ({ navigation }) => {
   const [photos, setPhotos] = useState([]);
   const [bio, setBio] = useState('');
   const [errors, setErrors] = useState({});
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
   const photoScale = new Animated.Value(0.8);
   const bioTranslate = new Animated.Value(50);
@@ -138,7 +163,7 @@ const ProfileSetup = ({ navigation }) => {
         useNativeDriver: Platform.OS !== 'web',
       }),
     ]).start();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -196,11 +221,16 @@ const ProfileSetup = ({ navigation }) => {
         console.log(`Photo upload response (${endpoint}):`, response.data);
         if (response.data.success) {
           if (isProfilePic) {
-            setProfilePic(response.data.data.selfieUrl);
-            setUser(prev => ({ ...prev, selfie: response.data.data.selfieUrl }));
+            const selfieUrl = response.data.data.selfieUrl;
+            console.log('Setting profilePic to:', selfieUrl);
+            // Add cache-busting query parameter to prevent caching issues
+            setProfilePic(`${selfieUrl}?t=${new Date().getTime()}`);
+            setUser(prev => ({ ...prev, selfie: selfieUrl }));
           } else {
-            setPhotos(prev => [...prev, { url: response.data.data.url, _id: response.data.data._id }]);
-            setUser(prev => ({ ...prev, photos: [...prev.photos, { url: response.data.data.url, _id: response.data.data._id }] }));
+            const newPhoto = { url: response.data.data.url, _id: response.data.data._id };
+            console.log('Adding new photo to photos:', newPhoto);
+            setPhotos(prev => [...prev, newPhoto]);
+            setUser(prev => ({ ...prev, photos: [...prev.photos, newPhoto] }));
           }
           setErrors(prev => ({ ...prev, profilePic: null, photos: null }));
           triggerHaptic('medium');
@@ -242,11 +272,16 @@ const ProfileSetup = ({ navigation }) => {
     }
   };
 
+  const handlePhotoClick = (url) => {
+    console.log('Photo clicked, opening ImageModal with URL:', url);
+    setSelectedImageUrl(url);
+    setImageModalVisible(true);
+  };
+
   const handleProfileSetup = async () => {
     if (!validateForm()) return;
 
     try {
-      // Update bio
       console.log('Updating bio...');
       const updateResponse = await api.put('/users/me', { bio });
       console.log('Bio update response:', updateResponse.data);
@@ -272,67 +307,84 @@ const ProfileSetup = ({ navigation }) => {
 
   return (
     <Container>
-      <Text variant="h1" style={{ fontSize: 24, marginBottom: theme.spacing.sm /* Reduced font size and margin */ }}>
-        Set Up Your Profile
-      </Text>
-      <Animated.View style={{ transform: [{ scale: photoScale }] }}>
-        <PhotoUploadContainer onPress={() => handlePhotoUpload(true)}>
-          {profilePic ? (
-            <Photo source={{ uri: profilePic }} />
-          ) : (
-            <Ionicons name="add" size={32} color={theme.colors.text.primary} /> 
-          )}
-        </PhotoUploadContainer>
-      </Animated.View>
-      {errors.profilePic && (
-        <ErrorText>{errors.profilePic}</ErrorText>
-      )}
-      <PhotosGrid>
-        {photos.map(photo => (
-          <PhotoWrapper key={photo._id}>
-            <GridPhoto source={{ uri: photo.url }} />
-            <DeletePhotoButton onPress={() => handleDeletePhoto(photo._id)}>
-              <Ionicons name="close-circle" size={16} color={theme.colors.text.primary} /> 
-            </DeletePhotoButton>
-          </PhotoWrapper>
-        ))}
-        {photos.length < 9 && (
-          <AddPhotoButton onPress={() => handlePhotoUpload(false)}>
-            <Ionicons name="add" size={32} color={theme.colors.text.secondary} /> 
-            <Text style={{ color: theme.colors.text.secondary, marginTop: theme.spacing.xs, fontSize: 12  }}>
-              Add Photo
-            </Text>
-          </AddPhotoButton>
+      <Header>
+        <Text style={{ fontSize: 48, fontFamily: 'Poppins-Bold', color: theme.colors.text.primary }}>
+          LIF
+        </Text>
+        <Ionicons name="heart" size={48} color={theme.colors.accent.pink} style={{ marginLeft: theme.spacing.sm }} />
+      </Header>
+      <ContentContainer contentContainerStyle={{ alignItems: 'center' }}>
+        <Text variant="h1" style={{ fontSize: 24, marginVertical: theme.spacing.sm }}>
+          Set Up Your Profile
+        </Text>
+        <AnimatedContainer style={{ transform: [{ scale: photoScale }] }}>
+          <PhotoUploadContainer onPress={() => handlePhotoUpload(true)}>
+            {profilePic ? (
+              <TouchableOpacity onPress={() => handlePhotoClick(profilePic)}>
+                <Photo source={{ uri: profilePic }} />
+              </TouchableOpacity>
+            ) : (
+              <Ionicons name="add" size={32} color={theme.colors.text.primary} />
+            )}
+          </PhotoUploadContainer>
+        </AnimatedContainer>
+        {errors.profilePic && (
+          <ErrorText>{errors.profilePic}</ErrorText>
         )}
-      </PhotosGrid>
-      {errors.photos && (
-        <ErrorText>{errors.photos}</ErrorText>
-      )}
-      <Animated.View style={{ transform: [{ translateY: bioTranslate }] }}>
-        <BioInput
-          value={bio}
-          onChangeText={setBio}
-          placeholder="Tell us about yourself"
-          placeholderTextColor={theme.colors.text.secondary}
-          multiline
-        />
-      </Animated.View>
-      {errors.bio && (
-        <ErrorText>{errors.bio}</ErrorText>
-      )}
-      {errors.general && (
-        <ErrorText>{errors.general}</ErrorText>
-      )}
-      <Animated.View style={{ transform: [{ scale: continueButtonScale }], marginTop: theme.spacing.md /* Reduced margin */ }}>
-        <Button
-          title="Continue"
-          onPress={() => {
-            handleProfileSetup();
-            triggerHaptic('light');
-          }}
-          textStyle={{ fontSize: 14 /* Reduced font size */ }}
-        />
-      </Animated.View>
+        <PhotosGrid>
+          {photos.map(photo => (
+            <PhotoWrapper key={photo._id}>
+              <TouchableOpacity onPress={() => handlePhotoClick(photo.url)}>
+                <GridPhoto source={{ uri: photo.url }} />
+              </TouchableOpacity>
+              <DeletePhotoButton onPress={() => handleDeletePhoto(photo._id)}>
+                <Ionicons name="close-circle" size={16} color={theme.colors.text.primary} />
+              </DeletePhotoButton>
+            </PhotoWrapper>
+          ))}
+          {photos.length < 9 && (
+            <AddPhotoButton onPress={() => handlePhotoUpload(false)}>
+              <Ionicons name="add" size={32} color={theme.colors.text.secondary} />
+              <Text style={{ color: theme.colors.text.secondary, marginTop: theme.spacing.xs, fontSize: 12 }}>
+                Add Photo
+              </Text>
+            </AddPhotoButton>
+          )}
+        </PhotosGrid>
+        {errors.photos && (
+          <ErrorText>{errors.photos}</ErrorText>
+        )}
+        <AnimatedContainer style={{ transform: [{ translateY: bioTranslate }] }}>
+          <BioInput
+            value={bio}
+            onChangeText={setBio}
+            placeholder="Tell us about yourself"
+            placeholderTextColor={theme.colors.text.secondary}
+            multiline
+          />
+        </AnimatedContainer>
+        {errors.bio && (
+          <ErrorText>{errors.bio}</ErrorText>
+        )}
+        {errors.general && (
+          <ErrorText>{errors.general}</ErrorText>
+        )}
+        <AnimatedContainer style={{ transform: [{ scale: continueButtonScale }], marginTop: theme.spacing.md }}>
+          <Button
+            title="Continue"
+            onPress={() => {
+              handleProfileSetup();
+              triggerHaptic('light');
+            }}
+            textStyle={{ fontSize: 14 }}
+          />
+        </AnimatedContainer>
+      </ContentContainer>
+      <ImageModal
+        visible={imageModalVisible}
+        imageUrl={selectedImageUrl}
+        onClose={() => setImageModalVisible(false)}
+      />
     </Container>
   );
 };
