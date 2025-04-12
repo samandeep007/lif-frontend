@@ -60,7 +60,6 @@ const ActionButtons = styled.View`
   flex-direction: row;
   justify-content: space-around;
   width: 100%;
-  padding: 2px;
   position: absolute;
   bottom: 20px;
 `;
